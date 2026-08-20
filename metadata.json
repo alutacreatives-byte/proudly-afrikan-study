@@ -1,0 +1,6 @@
+{
+  "name": "Proudly Afrikan Study",
+  "description": "The study and learning companion to Proudly Afrikan Quiz. Learn it. Remember it. Own it. Featuring flashcards, guided study sessions, practice questions, spaced review, and custom study set generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
