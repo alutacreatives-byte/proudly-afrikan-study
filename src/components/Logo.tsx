@@ -3,6 +3,7 @@ import React from 'react';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
+  showStudyBadge?: boolean;
   className?: string;
   onClick?: () => void;
 }
@@ -10,6 +11,7 @@ interface LogoProps {
 export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   showTagline = false,
+  showStudyBadge = false,
   className = '',
   onClick,
 }) => {
@@ -72,11 +74,13 @@ export const Logo: React.FC<LogoProps> = ({
           >
             PROUDLY AFRIKAN
           </span>
-          <span
-            className={`font-display font-black tracking-wider text-white bg-[#D92B8A] border-[1.5px] border-[#161616] rounded shadow-[1.5px_1.5px_0px_#161616] uppercase ${badgeSizes[size]}`}
-          >
-            STUDY
-          </span>
+          {showStudyBadge && (
+            <span
+              className={`font-display font-black tracking-wider text-white bg-[#D92B8A] border-[1.5px] border-[#161616] rounded shadow-[1.5px_1.5px_0px_#161616] uppercase ${badgeSizes[size]}`}
+            >
+              STUDY
+            </span>
+          )}
         </div>
         {showTagline && (
           <span className="font-mono text-[11px] sm:text-xs text-[#6B6862] font-semibold tracking-wide mt-0.5">

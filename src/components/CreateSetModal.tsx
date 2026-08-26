@@ -1,70 +1,155 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StudySet, StudyConcept, AppView } from '../types';
 import { AIService } from '../services/aiService';
+import { isTextCorruptedOrUnreadable } from '../utils/textValidation';
 import { 
   X, 
   Sparkles, 
   FileText, 
   Upload, 
   BookOpen, 
-  CheckCircle2, 
   Layers, 
-  HelpCircle, 
   ArrowRight, 
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  Compass,
+  CheckCircle2,
+  Bookmark,
+  Paperclip,
+  Trash2
 } from 'lucide-react';
+
+export type GeneratorMode = 
+  | 'exam' 
+  | 'worksheet' 
+  | 'lesson-plan' 
+  | 'pdf-quiz' 
+  | 'study-guide' 
+  | 'slides' 
+  | 'course' 
+  | 'roadmap'
+  | 'standard';
+
+export type InputMethod = 'topic' | 'paste' | 'upload';
+
+export interface UploadedDocument {
+  name: string;
+  size: number;
+  text: string;
+  wordCount?: number;
+}
 
 interface CreateSetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSetCreated: (newSet: StudySet, autoLaunchMode?: AppView) => void;
+  initialMethod?: InputMethod;
+  initialGeneratorMode?: GeneratorMode;
+  initialTopic?: string;
 }
-
-type InputMethod = 'topic' | 'paste' | 'upload';
 
 export const CreateSetModal: React.FC<CreateSetModalProps> = ({
   isOpen,
   onClose,
   onSetCreated,
+  initialMethod = 'topic',
+  initialGeneratorMode = 'standard',
+  initialTopic = '',
 }) => {
-  const [method, setMethod] = useState<InputMethod>('topic');
-  const [topicInput, setTopicInput] = useState<string>('');
+  const [method, setMethod] = useState<InputMethod>(initialMethod);
+  const [generatorMode, setGeneratorMode] = useState<GeneratorMode>(initialGeneratorMode);
+  const [topicInput, setTopicInput] = useState<string>(initialTopic);
   const [notesInput, setNotesInput] = useState<string>('');
-  const [categoryInput, setCategoryInput] = useState<string>('GENERAL KNOWLEDGE');
+  const [categoryInput, setCategoryInput] = useState<string>('General Knowledge');
   const [conceptCount, setConceptCount] = useState<number>(6);
+  const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(null);
   
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isParsingFile, setIsParsingFile] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedSet, setGeneratedSet] = useState<StudySet | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      if (initialMethod) setMethod(initialMethod);
+      if (initialGeneratorMode) setGeneratorMode(initialGeneratorMode);
+      if (initialTopic) setTopicInput(initialTopic);
+      setGeneratedSet(null);
+      setGenerationError(null);
+      setIsParsingFile(false);
+    }
+  }, [isOpen, initialMethod, initialGeneratorMode, initialTopic]);
+
   if (!isOpen) return null;
 
-  const topicPresets = [
-    { title: 'The South African Constitution & Bill of Rights', cat: 'AFRICAN HISTORY' },
-    { title: 'Great Zimbabwe & Ancient Shona Architecture', cat: 'AFRICAN HISTORY' },
-    { title: 'Swahili Essential Grammar & Noun Classes', cat: 'AFRICAN LANGUAGES' },
-    { title: 'FinTech, M-PESA & Digital Banking in Africa', cat: 'BUSINESS' },
-    { title: 'Cellular Respiration & Photosynthesis', cat: 'SCIENCE' },
-    { title: 'Wisdom Literature & Parables of Solomon', cat: 'BIBLE & WISDOM' },
-  ];
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      setNotesInput(content);
+    const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setGenerationError('Maximum upload size is 20 MB. Please upload a smaller document.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setIsParsingFile(true);
+    setGenerationError(null);
+
+    try {
+      const parsed = await AIService.parseDocument(file);
+      const isCorrupted = isTextCorruptedOrUnreadable(parsed.text);
+
+      // Keep the uploaded document attached and usable by the tool
+      const docData: UploadedDocument = {
+        name: file.name,
+        size: file.size,
+        text: isCorrupted ? '' : parsed.text,
+        wordCount: isCorrupted ? 0 : parsed.wordCount,
+      };
+      setUploadedDocument(docData);
+
+      // Do NOT automatically insert extracted document text into the "Paste copy here" input
+      // if the extracted text is corrupted, garbled or unreadable.
+      if (!isCorrupted && parsed.text && parsed.text.trim().length > 0) {
+        // Only set notes input if clean and notesInput is currently empty
+        if (!notesInput.trim()) {
+          setNotesInput(parsed.text);
+        }
+      }
+
       if (!topicInput) {
         setTopicInput(file.name.replace(/\.[^/.]+$/, ''));
       }
-      setMethod('paste');
-    };
-    reader.readAsText(file);
+    } catch (err: any) {
+      // Keep document attached even if parsing fails
+      setUploadedDocument({
+        name: file.name,
+        size: file.size,
+        text: '',
+        wordCount: 0,
+      });
+      if (!topicInput) {
+        setTopicInput(file.name.replace(/\.[^/.]+$/, ''));
+      }
+    } finally {
+      setIsParsingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveDocument = () => {
+    setUploadedDocument(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleGenerate = async () => {
@@ -73,9 +158,12 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
     setGeneratedSet(null);
 
     try {
+      const effectiveNotesText = notesInput.trim() || (uploadedDocument && !isTextCorruptedOrUnreadable(uploadedDocument.text) ? uploadedDocument.text.trim() : '');
+      const effectiveTopic = topicInput.trim() || (uploadedDocument ? uploadedDocument.name.replace(/\.[^/.]+$/, '') : (effectiveNotesText.slice(0, 50) || 'Study Material'));
+
       const result = await AIService.generateStudySet({
-        topic: topicInput,
-        notesText: method === 'topic' ? undefined : notesInput,
+        topic: effectiveTopic,
+        notesText: effectiveNotesText || (uploadedDocument ? `Document Source: ${uploadedDocument.name}` : undefined),
         category: categoryInput,
         count: conceptCount,
       });
@@ -94,24 +182,48 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
     onClose();
   };
 
+  // Continue button enablement logic:
+  // - If a valid document is uploaded, Continue is ALWAYS enabled even if notesInput is empty or cleared.
+  // - Deleting text from the input field does NOT disable Continue when a valid document is already uploaded.
+  const isContinueDisabled = isGenerating || isParsingFile || (
+    !uploadedDocument && (
+      (method === 'topic' && !topicInput.trim()) ||
+      (method === 'paste' && !notesInput.trim()) ||
+      (method === 'upload' && !notesInput.trim() && !topicInput.trim())
+    )
+  );
+
+  const generatorTitles: Record<GeneratorMode, string> = {
+    'standard': 'Study & Resource Builder',
+    'exam': 'Exam Generator (With Answer Keys)',
+    'worksheet': 'Worksheet Generator (Classroom Ready)',
+    'lesson-plan': 'Lesson Plan Generator (Pedagogical)',
+    'pdf-quiz': 'PDF → Quiz Generator',
+    'study-guide': 'PDF → Revision Study Guide',
+    'slides': 'Presentation & Slide Outline Builder',
+    'course': 'Course Module Architect',
+    'roadmap': 'Learning Pathway & Roadmap'
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-[#161616]/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
       <div 
         id="create-set-modal"
-        className="tactile-card bg-[#FFFFFF] rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-fadeIn my-auto"
+        className="bg-white rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-stone-200 my-auto animate-fadeIn"
       >
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 border-b-[2.5px] border-[#161616] flex items-center justify-between bg-[#FAF7F0]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#D92B8A] text-white flex items-center justify-center border-2 border-[#161616] shadow-[2px_2px_0px_#161616]">
-              <Sparkles className="w-4 h-4" />
+        <div className="p-5 sm:p-6 border-b border-stone-200 flex items-center justify-between bg-[#FAF8F5]">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-[#18181B] text-[#D92B8A] flex items-center justify-center shadow-md">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase text-[#D92B8A] block">
-                STUDY MATERIAL ENGINE
-              </span>
-              <h2 className="font-display font-black text-xl sm:text-2xl uppercase text-[#161616] leading-none">
-                CREATE A STUDY SET
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-pink-50 text-[#D92B8A] font-mono text-xs font-bold uppercase rounded-full mb-0.5 border border-pink-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D92B8A] inline-block"></span>
+                <span>{generatorTitles[generatorMode] || 'Resource Generator'}</span>
+              </div>
+              <h2 className="font-display font-black text-xl sm:text-2xl uppercase text-[#161616] tracking-tight leading-none">
+                Resource Workbench & Set Builder
               </h2>
             </div>
           </div>
@@ -119,10 +231,10 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
           <button
             id="close-create-set-modal-btn"
             onClick={onClose}
-            className="p-2 rounded-md hover:bg-[#FAF7F0] border-2 border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px]"
+            className="p-2 rounded-full hover:bg-stone-200/70 border border-stone-300 text-stone-700 transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5 text-[#161616]" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -131,83 +243,95 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
           {!generatedSet ? (
             <>
               {/* Input Method Selector */}
-              <div className="grid grid-cols-3 gap-2 p-1 bg-[#FAF7F0] border-2 border-[#161616] rounded-xl">
+              <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#F4F1EA] rounded-full border border-stone-200">
                 <button
                   id="tab-enter-topic"
                   onClick={() => setMethod('topic')}
-                  className={`py-2.5 px-3 rounded-lg font-display text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2.5 px-3 rounded-full font-display text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                     method === 'topic'
-                      ? 'bg-[#161616] text-white shadow-[2px_2px_0px_#D92B8A]'
-                      : 'text-[#161616] hover:bg-[#FFFFFF]'
+                      ? 'bg-[#18181B] text-white shadow-md'
+                      : 'text-stone-700 hover:bg-white/80'
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>ENTER TOPIC</span>
+                  <span>01. Topic</span>
                 </button>
 
                 <button
                   id="tab-paste-text"
                   onClick={() => setMethod('paste')}
-                  className={`py-2.5 px-3 rounded-lg font-display text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2.5 px-3 rounded-full font-display text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                     method === 'paste'
-                      ? 'bg-[#161616] text-white shadow-[2px_2px_0px_#D92B8A]'
-                      : 'text-[#161616] hover:bg-[#FFFFFF]'
+                      ? 'bg-[#18181B] text-white shadow-md'
+                      : 'text-stone-700 hover:bg-white/80'
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>PASTE NOTES</span>
+                  <span>02. Paste</span>
                 </button>
 
                 <button
                   id="tab-upload-material"
                   onClick={() => setMethod('upload')}
-                  className={`py-2.5 px-3 rounded-lg font-display text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2.5 px-3 rounded-full font-display text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                     method === 'upload'
-                      ? 'bg-[#161616] text-white shadow-[2px_2px_0px_#D92B8A]'
-                      : 'text-[#161616] hover:bg-[#FFFFFF]'
+                      ? 'bg-[#18181B] text-white shadow-md'
+                      : 'text-stone-700 hover:bg-white/80'
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>UPLOAD FILE</span>
+                  <span>03. Upload</span>
                 </button>
               </div>
+
+              {/* Attached Document Banner (if document is uploaded) */}
+              {uploadedDocument && (
+                <div className="p-3.5 sm:p-4 bg-pink-50/70 border border-pink-200 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-[#18181B] text-[#D92B8A] flex items-center justify-center shrink-0 shadow-xs">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-[#161616] truncate">
+                          {uploadedDocument.name}
+                        </span>
+                        <span className="shrink-0 px-2 py-0.5 bg-[#D92B8A] text-white text-[10px] font-mono font-bold uppercase rounded-full">
+                          Attached
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-600 font-mono mt-0.5">
+                        {(uploadedDocument.size / 1024).toFixed(1)} KB &bull; Document ready for generation
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveDocument}
+                    className="p-1.5 rounded-full hover:bg-pink-100 text-stone-500 hover:text-red-600 transition-colors shrink-0"
+                    title="Remove attached document"
+                    aria-label="Remove attached document"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               {/* Method 1: Enter Topic */}
               {method === 'topic' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="font-display font-black text-xs uppercase text-[#161616] block">
-                      WHAT SUBJECT OR TOPIC DO YOU WANT TO MASTER?
+                    <label className="font-display font-black text-xs uppercase text-[#161616] block tracking-wider">
+                      What subject, lesson or topic do you want to build?
                     </label>
                     <input
                       id="topic-input-field"
                       type="text"
                       value={topicInput}
                       onChange={e => setTopicInput(e.target.value)}
-                      placeholder="e.g., The South African Constitution, Cellular Biology, Swahili Verbs..."
-                      className="w-full bg-[#FAF7F0] border-[2.5px] border-[#161616] rounded-xl p-3.5 text-sm font-semibold text-[#161616] placeholder:text-[#6B6862] shadow-[2.5px_2.5px_0px_#161616] focus:outline-none focus:ring-2 focus:ring-[#D92B8A]"
+                      placeholder="e.g., Kingdom of Kush, Solar Microgrids in Africa, Cell Biology..."
+                      className="w-full bg-[#FAF8F5] border border-stone-300 rounded-2xl p-4 text-base font-semibold text-[#161616] placeholder:text-stone-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#D92B8A]"
                     />
-                  </div>
-
-                  {/* Topic Presets */}
-                  <div className="space-y-2">
-                    <span className="font-mono text-[10px] font-bold uppercase text-[#6B6862]">
-                      OR TRY A SUGGESTED TOPIC:
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {topicPresets.map(preset => (
-                        <button
-                          key={preset.title}
-                          onClick={() => {
-                            setTopicInput(preset.title);
-                            setCategoryInput(preset.cat);
-                          }}
-                          className="text-left p-2.5 bg-[#FAF7F0] hover:bg-[#F0EAE0] border-[1.5px] border-[#161616] rounded-lg text-xs font-semibold text-[#161616] transition-all truncate"
-                        >
-                          &ldquo;{preset.title}&rdquo;
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -216,8 +340,8 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
               {method === 'paste' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="font-display font-black text-xs uppercase text-[#161616] block">
-                      PASTE YOUR STUDY NOTES, SYLLABUS, OR TEXT
+                    <label className="font-display font-black text-xs uppercase text-[#161616] block tracking-wider">
+                      Paste your syllabus, lesson transcript, or textbook excerpts
                     </label>
                     <textarea
                       id="notes-textarea-input"
@@ -225,20 +349,20 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
                       value={notesInput}
                       onChange={e => setNotesInput(e.target.value)}
                       placeholder="Paste your lecture notes, textbook passages, definitions, or study bullet points here..."
-                      className="w-full bg-[#FAF7F0] border-[2.5px] border-[#161616] rounded-xl p-3.5 text-xs sm:text-sm font-medium text-[#161616] placeholder:text-[#6B6862] shadow-[2.5px_2.5px_0px_#161616] focus:outline-none focus:ring-2 focus:ring-[#D92B8A]"
+                      className="w-full bg-[#FAF8F5] border border-stone-300 rounded-2xl p-4 text-sm font-medium text-[#161616] placeholder:text-stone-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#D92B8A]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="font-display font-black text-xs uppercase text-[#161616]">
-                      OPTIONAL SET TITLE
+                    <label className="font-display font-black text-xs uppercase text-[#161616] tracking-wider">
+                      Optional Set / Resource Title
                     </label>
                     <input
                       type="text"
                       value={topicInput}
                       onChange={e => setTopicInput(e.target.value)}
-                      placeholder="Give this study set a title..."
-                      className="w-full bg-[#FAF7F0] border-[2px] border-[#161616] rounded-lg p-2.5 text-xs font-semibold text-[#161616]"
+                      placeholder="Give this resource a title (e.g., Chapter 4: Photosynthesis)..."
+                      className="w-full bg-[#FAF8F5] border border-stone-300 rounded-2xl p-3.5 text-sm font-semibold text-[#161616] focus:outline-none focus:ring-2 focus:ring-[#D92B8A]"
                     />
                   </div>
                 </div>
@@ -251,73 +375,80 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    accept=".txt,.md,.json,.csv,.doc"
+                    accept=".txt,.md,.json,.csv,.doc,.docx,.pdf"
                     className="hidden"
                   />
                   <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#161616] bg-[#FAF7F0] hover:bg-[#F0EAE0] rounded-xl p-8 text-center cursor-pointer space-y-3 transition-colors"
+                    onClick={() => !isParsingFile && fileInputRef.current?.click()}
+                    className={`border-2 border-dashed ${
+                      isParsingFile ? 'border-pink-400 bg-pink-50/40 cursor-wait' : 'border-stone-300 hover:border-[#D92B8A] bg-[#FAF8F5] hover:bg-pink-50/30 cursor-pointer'
+                    } rounded-3xl p-8 text-center space-y-3 transition-colors shadow-sm`}
                   >
-                    <div className="w-12 h-12 mx-auto rounded-full bg-[#FFFFFF] border-2 border-[#161616] flex items-center justify-center text-[#D92B8A]">
-                      <Upload className="w-6 h-6" />
+                    <div className="w-14 h-14 mx-auto rounded-full bg-white border border-stone-200 shadow-sm flex items-center justify-center text-[#D92B8A]">
+                      {isParsingFile ? (
+                        <Loader2 className="w-7 h-7 animate-spin" />
+                      ) : (
+                        <Upload className="w-7 h-7" />
+                      )}
                     </div>
                     <div>
-                      <div className="font-display font-black text-base uppercase text-[#161616]">
-                        CLICK TO UPLOAD STUDY NOTES
+                      <div className="font-display font-black text-lg uppercase text-[#161616]">
+                        {isParsingFile ? 'Extracting Content from Document...' : (uploadedDocument ? 'Click to replace attached document' : 'Click to upload document or study material')}
                       </div>
-                      <div className="text-xs text-[#6B6862] mt-1">
-                        Supports text files (.txt, .md, .csv)
+                      <div className="text-sm text-stone-500 mt-1">
+                        Supports PDF (.pdf), Word (.docx, .doc), Markdown (.md), & Text (.txt) &bull; Maximum upload size is 20 MB
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Concept Count Selector */}
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1">
-                  <label className="font-display font-black text-xs uppercase text-[#161616]">
-                    CATEGORY
+              {/* Concept Count Selector & Subject Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1.5">
+                  <label className="font-display font-black text-xs uppercase text-[#161616] tracking-wider">
+                    Subject Category
                   </label>
                   <select
                     value={categoryInput}
                     onChange={e => setCategoryInput(e.target.value)}
-                    className="w-full bg-[#FAF7F0] border-[2px] border-[#161616] rounded-lg p-2.5 text-xs font-semibold text-[#161616]"
+                    className="w-full bg-[#FAF8F5] border border-stone-300 rounded-2xl p-3.5 text-xs sm:text-sm font-semibold text-[#161616] focus:outline-none focus:ring-2 focus:ring-[#D92B8A] shadow-sm"
                   >
-                    <option value="AFRICAN HISTORY">African History</option>
-                    <option value="AFRICAN GEOGRAPHY">African Geography</option>
-                    <option value="AFRICAN CULTURE">African Culture</option>
-                    <option value="AFRICAN LANGUAGES">African Languages</option>
-                    <option value="AFRICAN PROVERBS">African Proverbs</option>
-                    <option value="AFRICAN LEADERS & ICONS">African Leaders & Icons</option>
-                    <option value="BIBLE & WISDOM">Bible & Wisdom</option>
-                    <option value="SCIENCE">Science & Technology</option>
-                    <option value="BUSINESS">Business & Economics</option>
-                    <option value="GENERAL KNOWLEDGE">General Knowledge</option>
-                    <option value="EXAM PREPARATION">Exam Preparation</option>
+                    <option value="African Knowledge">African Knowledge & History</option>
+                    <option value="Mathematics & Science">Mathematics & Science</option>
+                    <option value="Technology & Computer Science">Technology & Computer Science</option>
+                    <option value="History & Geography">History & Geography</option>
+                    <option value="Languages & Literature">Languages & Literature</option>
+                    <option value="Business & Economics">Business & Economics</option>
+                    <option value="Health & Medicine">Health & Medicine</option>
+                    <option value="Law & Social Sciences">Law & Social Sciences</option>
+                    <option value="Arts & Design">Arts & Design</option>
+                    <option value="Religion & Philosophy">Religion & Philosophy</option>
+                    <option value="General Knowledge">General Knowledge</option>
+                    <option value="Exam Preparation">Exam Preparation</option>
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-display font-black text-xs uppercase text-[#161616]">
-                    TARGET CONCEPTS
+                <div className="space-y-1.5">
+                  <label className="font-display font-black text-xs uppercase text-[#161616] tracking-wider">
+                    Resource Depth & Concepts
                   </label>
                   <select
                     value={conceptCount}
                     onChange={e => setConceptCount(Number(e.target.value))}
-                    className="w-full bg-[#FAF7F0] border-[2px] border-[#161616] rounded-lg p-2.5 text-xs font-semibold text-[#161616]"
+                    className="w-full bg-[#FAF8F5] border border-stone-300 rounded-2xl p-3.5 text-xs sm:text-sm font-semibold text-[#161616] focus:outline-none focus:ring-2 focus:ring-[#D92B8A] shadow-sm"
                   >
-                    <option value={4}>4 Concepts (Fast ~5m)</option>
-                    <option value={6}>6 Concepts (Standard ~10m)</option>
-                    <option value={8}>8 Concepts (Comprehensive ~15m)</option>
-                    <option value={12}>12 Concepts (Deep ~25m)</option>
+                    <option value={4}>4 Concepts (~5 mins quick study)</option>
+                    <option value={6}>6 Concepts (~10 mins standard study)</option>
+                    <option value={8}>8 Concepts (~15 mins comprehensive)</option>
+                    <option value={12}>12 Concepts (~25 mins deep mastery)</option>
                   </select>
                 </div>
               </div>
 
               {generationError && (
-                <div className="p-3 bg-red-50 border-2 border-red-700 rounded-lg flex items-center gap-2 text-xs font-semibold text-red-900">
-                  <AlertCircle className="w-4 h-4 text-red-700 flex-shrink-0" />
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-xs font-semibold text-red-900">
+                  <AlertCircle className="w-5 h-5 text-red-700 flex-shrink-0" />
                   <span>{generationError}</span>
                 </div>
               )}
@@ -325,40 +456,41 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
           ) : (
             /* Generated Results Preview Screen */
             <div className="space-y-6 animate-fadeIn">
-              <div className="p-4 bg-[#FDEAF4] border-[2px] border-[#161616] rounded-xl flex items-center justify-between">
+              <div className="p-5 sm:p-6 bg-pink-50/80 border border-pink-200 rounded-3xl flex items-center justify-between">
                 <div>
-                  <div className="inline-block px-2 py-0.5 bg-[#D92B8A] text-white font-mono text-[10px] font-bold uppercase rounded border border-[#161616] mb-1">
-                    ANALYSIS COMPLETE
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D92B8A] text-white font-mono text-[10px] font-bold uppercase rounded-full mb-1.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Synthesis Complete</span>
                   </div>
-                  <h3 className="font-display font-black text-xl uppercase text-[#161616]">
-                    {generatedSet.concepts.length} CONCEPTS IDENTIFIED
+                  <h3 className="font-display font-black text-2xl uppercase text-[#161616]">
+                    {generatedSet.concepts.length} Concepts Identified
                   </h3>
-                  <p className="text-xs text-[#6B6862] font-medium">
-                    Ready for Learn & Understand, Flashcards, Practise, and Spaced Review.
+                  <p className="text-sm text-stone-600 font-medium mt-0.5">
+                    Ready for Learn & Understand, Flashcards, Formative Practice, and Spaced Review.
                   </p>
                 </div>
               </div>
 
               {/* Concepts Preview List */}
               <div className="space-y-3">
-                <span className="font-display font-black text-xs uppercase tracking-wider text-[#6B6862]">
-                  EXTRACTED STUDY CONCEPTS:
+                <span className="font-display font-black text-xs uppercase tracking-wider text-stone-600">
+                  Extracted Study Concepts:
                 </span>
-                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
                   {generatedSet.concepts.map((c, i) => (
                     <div
                       key={c.id}
-                      className="p-3 bg-[#FAF7F0] border-[1.5px] border-[#161616] rounded-lg space-y-1"
+                      className="p-4 bg-[#FAF8F5] border border-stone-200/90 rounded-2xl space-y-1 shadow-sm"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-display font-black text-xs uppercase text-[#161616]">
+                        <span className="font-display font-black text-sm uppercase text-[#161616]">
                           {i + 1}. {c.title}
                         </span>
-                        <span className="text-[10px] font-mono text-[#D92B8A] font-bold">
+                        <span className="text-[11px] font-mono text-[#D92B8A] font-bold px-2 py-0.5 bg-pink-50 rounded-full border border-pink-200">
                           {c.difficulty}
                         </span>
                       </div>
-                      <p className="text-xs text-[#6B6862] line-clamp-2">
+                      <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
                         {c.summary}
                       </p>
                     </div>
@@ -370,31 +502,31 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-6 border-t-[2.5px] border-[#161616] bg-[#FAF7F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 sm:p-6 border-t border-stone-200 bg-[#FAF8F5] flex flex-col sm:flex-row items-center justify-between gap-3">
           {!generatedSet ? (
             <>
               <button
                 onClick={onClose}
-                className="w-full sm:w-auto px-4 py-2.5 text-[#161616] font-display text-xs font-bold uppercase"
+                className="w-full sm:w-auto px-5 py-2.5 text-stone-600 hover:text-[#161616] font-display text-xs font-bold uppercase rounded-full hover:bg-stone-200/60 transition-colors"
               >
-                CANCEL
+                Cancel
               </button>
 
               <button
                 id="generate-study-set-submit-btn"
-                disabled={isGenerating || (method === 'topic' && !topicInput.trim()) || (method === 'paste' && !notesInput.trim())}
+                disabled={isContinueDisabled}
                 onClick={handleGenerate}
-                className="w-full sm:w-auto px-6 py-3 bg-[#D92B8A] disabled:opacity-50 text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-md tactile-btn flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-7 py-3.5 bg-[#D92B8A] hover:bg-[#c02479] disabled:opacity-50 text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-full shadow-[0_4px_16px_rgba(217,43,138,0.35)] flex items-center justify-center gap-2 transition-all active:scale-95"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>ANALYSING MATERIAL...</span>
+                    <span>Working on it…</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>GENERATE STUDY SET</span>
+                    <span>Continue & Generate ↗</span>
                   </>
                 )}
               </button>
@@ -403,26 +535,26 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
             <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
               <button
                 onClick={() => setGeneratedSet(null)}
-                className="w-full sm:w-auto px-4 py-2 text-[#161616] font-display text-xs font-bold uppercase"
+                className="w-full sm:w-auto px-5 py-2.5 text-stone-600 font-display text-xs font-bold uppercase rounded-full hover:bg-stone-200/60"
               >
-                EDIT INPUT
+                Edit Input
               </button>
 
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => handleSaveAndLaunch('flashcards')}
-                  className="px-4 py-2.5 bg-[#FFFFFF] text-[#161616] font-display text-xs font-black uppercase rounded-md tactile-btn flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-white text-[#161616] font-display text-xs font-black uppercase rounded-full border border-stone-300 shadow-sm hover:bg-stone-100 flex items-center gap-1.5"
                 >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>FLASHCARDS</span>
+                  <Layers className="w-3.5 h-3.5 text-[#D92B8A]" />
+                  <span>Flashcards</span>
                 </button>
 
                 <button
                   onClick={() => handleSaveAndLaunch('study')}
-                  className="px-5 py-2.5 bg-[#D92B8A] text-white font-display text-xs font-black uppercase rounded-md tactile-btn flex items-center gap-1.5"
+                  className="px-6 py-2.5 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs font-black uppercase rounded-full shadow-md flex items-center gap-1.5"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>STUDY NOW</span>
+                  <span>Study Now</span>
                 </button>
               </div>
             </div>

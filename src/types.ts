@@ -134,6 +134,9 @@ export interface UserStudyNote {
 
 export type AppView = 
   | 'home'
+  | 'create'
+  | 'study-hub'
+  | 'homework'
   | 'study'
   | 'learn'
   | 'flashcards'
@@ -168,3 +171,103 @@ export interface StudyPlanRecommendation {
   newCount: number;
   rationale: string;
 }
+
+// 1. AI Study Tutor & Homework Help Types
+export type HomeworkActionType = 
+  | 'chat'
+  | 'explain' 
+  | 'hint' 
+  | 'work_through' 
+  | 'check_answer' 
+  | 'practice_similar'
+  | 'writing_structure';
+
+export interface HomeworkAttachment {
+  name: string;
+  type: string;
+  size: number;
+  content?: string;
+  base64?: string;
+  mimeType?: string;
+}
+
+export interface HomeworkEvaluation {
+  isCorrect?: boolean | 'partial';
+  summaryVerdict: string;
+  detailedFeedback: string;
+  whatYouDidWell: string;
+  howToImprove: string;
+  guidedStepSuggestion?: string;
+}
+
+export interface TutorMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: string;
+  suggestedFollowUps?: string[];
+  homeworkAction?: HomeworkActionType;
+  attachmentName?: string;
+  evaluation?: HomeworkEvaluation;
+}
+
+// 2. Differentiated Learning Types
+export type DifferentiatedLearningMode = 'simplify' | 'deeper' | 'differently' | 'challenge';
+
+export interface DifferentiatedResult {
+  mode: DifferentiatedLearningMode;
+  modeLabel: string;
+  title: string;
+  content: string;
+  keyTakeaway: string;
+  generatedAt: string;
+}
+
+// 3. Study Guide Generator Types
+export interface StudyGuideReviewQuestion {
+  question: string;
+  answer: string;
+  hint?: string;
+}
+
+export interface StudyGuide {
+  id: string;
+  setId: string;
+  setTitle: string;
+  category: string;
+  overview: string;
+  keyConcepts: {
+    title: string;
+    summary: string;
+    explanation: string;
+  }[];
+  importantFacts: string[];
+  definitions: {
+    term: string;
+    definition: string;
+  }[];
+  mainIdeas: {
+    idea: string;
+    detail: string;
+  }[];
+  keyThingsToRemember: string[];
+  reviewQuestions: StudyGuideReviewQuestion[];
+  generatedAt: string;
+}
+
+// 4. Summary Generator Types
+export type SummaryType = 'quick' | 'standard' | 'detailed';
+
+export interface StudySummary {
+  id: string;
+  setId: string;
+  setTitle: string;
+  targetTitle?: string;
+  summaryType: SummaryType;
+  overview: string;
+  keyPoints: string[];
+  fullSummary: string;
+  keyTakeaways: string[];
+  generatedAt: string;
+}
+

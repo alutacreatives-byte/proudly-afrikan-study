@@ -39,7 +39,6 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
   // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is in an input field
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
 
       if (e.code === 'Space') {
@@ -82,7 +81,6 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
         setCurrentIndex(prev => prev + 1);
       }, 180);
     } else {
-      // Completed session
       const confident = Object.values(updatedRatings).filter(
         r => r === 'knew_it' || r === 'easy'
       ).length;
@@ -116,10 +114,13 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
 
   if (!currentConcept) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <h2 className="font-display font-black text-2xl uppercase">No flashcards found</h2>
-        <button onClick={onBack} className="px-5 py-2 bg-[#D92B8A] text-white rounded font-display">
-          GO BACK
+      <div className="text-center py-16 space-y-4 max-w-md mx-auto bg-white border border-stone-200 rounded-3xl p-8 shadow-lg">
+        <h2 className="font-display font-black text-2xl uppercase text-stone-900">No flashcards found</h2>
+        <button 
+          onClick={onBack} 
+          className="px-6 py-2.5 bg-[#D92B8A] hover:bg-[#c02479] text-white rounded-full font-display text-xs font-bold uppercase shadow-sm transition-all"
+        >
+          Go Back
         </button>
       </div>
     );
@@ -128,22 +129,22 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
   const progressPercentage = Math.round(((currentIndex + 1) / totalCards) * 100);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-16">
+    <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Top Header & Progress */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <button
             id="flashcards-back-btn"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 font-display text-xs font-bold text-[#161616] hover:text-[#D92B8A] uppercase tracking-wider"
+            className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>EXIT FLASHCARDS</span>
+            <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-2 font-mono text-xs font-bold text-[#161616]">
-            <span className="px-2 py-0.5 bg-[#FFFFFF] border border-[#161616] rounded shadow-[1px_1px_0px_#161616]">
-              CARD {currentIndex + 1} OF {totalCards}
+          <div className="flex items-center gap-2 font-mono text-xs font-bold text-stone-800">
+            <span className="px-3 py-1 bg-white border border-stone-200 rounded-full shadow-sm">
+              Card {currentIndex + 1} of {totalCards}
             </span>
             <span className="text-[#D92B8A] font-bold">
               {progressPercentage}%
@@ -152,9 +153,9 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
         </div>
 
         {/* Tactile Progress Bar */}
-        <div className="w-full h-3 bg-[#FAF7F0] border-2 border-[#161616] rounded-full overflow-hidden p-0.5">
+        <div className="w-full h-2 bg-stone-100 border border-stone-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#D92B8A] rounded-full transition-all duration-300"
+            className="h-full bg-[#D92B8A] transition-all duration-300 rounded-full"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -163,63 +164,65 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
       {/* Set Title Banner */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <span className="text-[10px] font-mono font-bold uppercase text-[#6B6862]">
+          <span className="text-xs font-mono font-bold uppercase text-stone-500">
             {studySet.category}
           </span>
-          <h2 className="font-display font-black text-lg sm:text-xl uppercase text-[#161616]">
+          <h2 className="font-display font-black text-lg sm:text-xl text-stone-900">
             {studySet.title}
           </h2>
         </div>
 
         <button
           onClick={handleFlip}
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] border-[1.5px] border-[#161616] rounded text-xs font-mono font-bold text-[#161616] shadow-[1.5px_1.5px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px]"
+          className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white border border-stone-200 rounded-full text-xs font-mono font-bold text-stone-800 shadow-sm hover:bg-stone-50 transition-colors"
         >
-          <RotateCw className="w-3.5 h-3.5" />
-          <span>FLIP [SPACE]</span>
+          <RotateCw className="w-3.5 h-3.5 text-[#D92B8A]" />
+          <span>Flip [Space]</span>
         </button>
       </div>
 
-      {/* The Tactile 3D Flashcard */}
+      {/* The 3D Flashcard Container */}
       <div
         id="interactive-flashcard"
         onClick={handleFlip}
-        className={`tactile-card min-h-[360px] sm:min-h-[420px] rounded-2xl p-6 sm:p-10 flex flex-col justify-between cursor-pointer transition-all duration-200 select-none relative ${
+        className={`bg-white border border-stone-200/90 rounded-3xl shadow-xl min-h-[380px] sm:min-h-[440px] p-6 sm:p-10 flex flex-col justify-between cursor-pointer transition-all select-none relative ${
           isFlipped 
-            ? 'bg-[#FFFFFF] ring-2 ring-[#D92B8A]' 
-            : 'bg-[#FAF7F0] hover:bg-[#FDFBF7]'
+            ? 'ring-2 ring-[#D92B8A]/40' 
+            : 'hover:border-stone-300'
         }`}
       >
         {/* Card Top Pill & Mode Tag */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded text-[11px] font-mono font-bold uppercase border border-[#161616] ${
-                isFlipped ? 'bg-[#D92B8A] text-white' : 'bg-[#161616] text-[#FAF7F0]'
+              <span className={`px-3 py-1 text-xs font-mono font-bold uppercase rounded-full border ${
+                isFlipped 
+                  ? 'bg-[#D92B8A] text-white border-[#D92B8A]' 
+                  : 'bg-stone-900 text-white border-stone-900'
               }`}>
-                {isFlipped ? 'ANSWER / SUMMARY' : 'QUESTION'}
+                {isFlipped ? 'Answer / Summary' : 'Question'}
               </span>
 
-              <span className="text-xs font-mono font-semibold text-[#6B6862]">
+              <span className="text-xs font-mono font-bold uppercase text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-full border border-stone-200">
                 {currentConcept.difficulty}
               </span>
             </div>
 
             {currentRating && (
-              <span className="px-2 py-0.5 bg-[#FAF7F0] border border-[#161616] text-[10px] font-mono font-bold uppercase text-[#D92B8A]">
-                RATED: {currentRating.replace(/_/g, ' ')}
+              <span className="px-3 py-1 bg-pink-50 border border-pink-200 rounded-full text-xs font-mono font-bold uppercase text-[#D92B8A]">
+                Rated: {currentRating.replace(/_/g, ' ')}
               </span>
             )}
           </div>
 
-          <h3 className="font-display font-bold text-xs sm:text-sm uppercase tracking-wider text-[#6B6862] mb-3">
+          <h3 className="font-display font-bold text-xs sm:text-sm uppercase tracking-wider text-stone-500 mb-3">
             {currentConcept.title}
           </h3>
 
           {/* Card Content: Question or Answer */}
           {!isFlipped ? (
             <div className="space-y-4 pt-2 sm:pt-4">
-              <p className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-[#161616] leading-tight">
+              <p className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-stone-900 leading-tight">
                 {currentConcept.flashcardQuestion}
               </p>
 
@@ -231,7 +234,7 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                         e.stopPropagation();
                         setShowHint(true);
                       }}
-                      className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#6B6862] hover:text-[#D92B8A] underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-stone-500 hover:text-[#D92B8A] underline transition-colors"
                     >
                       <Lightbulb className="w-3.5 h-3.5" />
                       <span>Show Hint</span>
@@ -239,9 +242,9 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                   ) : (
                     <div 
                       onClick={(e) => e.stopPropagation()}
-                      className="p-3 bg-[#FFFFFF] border-2 border-[#161616] rounded-md text-xs font-medium text-[#161616] shadow-[2px_2px_0px_#161616] animate-fadeIn"
+                      className="p-4 bg-stone-50 border border-stone-200 rounded-2xl text-sm font-medium text-stone-800 shadow-sm animate-fadeIn leading-relaxed"
                     >
-                      <span className="font-mono font-bold text-[#D92B8A] mr-1">HINT:</span>
+                      <span className="font-mono font-bold text-[#D92B8A] mr-1.5">HINT:</span>
                       {currentConcept.flashcardHint}
                     </div>
                   )}
@@ -250,16 +253,16 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
             </div>
           ) : (
             <div className="space-y-4 pt-2 sm:pt-4 animate-fadeIn">
-              <p className="font-display font-extrabold text-xl sm:text-2xl lg:text-3xl text-[#161616] leading-snug">
+              <p className="font-display font-bold text-xl sm:text-2xl lg:text-3xl text-stone-900 leading-snug">
                 {currentConcept.flashcardAnswer}
               </p>
 
               {currentConcept.summary && currentConcept.summary !== currentConcept.flashcardAnswer && (
-                <div className="p-4 sm:p-5 bg-[#FAF7F0] border-2 border-[#161616] rounded-none mt-4 shadow-[2px_2px_0px_#161616]">
+                <div className="p-5 bg-stone-50 border border-stone-200 rounded-2xl mt-4 shadow-sm">
                   <span className="font-mono text-xs font-bold text-[#D92B8A] uppercase block mb-1">
-                    KEY CONTEXT
+                    Key Context
                   </span>
-                  <p className="text-sm sm:text-base text-[#161616] leading-relaxed">
+                  <p className="text-sm sm:text-base text-stone-700 leading-relaxed font-medium">
                     {currentConcept.summary}
                   </p>
                 </div>
@@ -269,10 +272,10 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
         </div>
 
         {/* Bottom Prompts / Reveal Action */}
-        <div className="pt-6 border-t-2 border-[#161616]/15 flex items-center justify-between">
+        <div className="pt-6 border-t border-stone-200 flex items-center justify-between">
           {!isFlipped ? (
             <div className="w-full flex items-center justify-between">
-              <span className="text-xs font-mono text-[#6B6862] font-semibold">
+              <span className="text-xs sm:text-sm font-mono text-stone-500 font-semibold">
                 Click or press Space to reveal
               </span>
               <button
@@ -281,53 +284,53 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                   e.stopPropagation();
                   setIsFlipped(true);
                 }}
-                className="px-5 py-2.5 bg-[#D92B8A] text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-md tactile-btn"
+                className="px-6 py-2.5 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all active:scale-95"
               >
-                REVEAL ANSWER
+                Reveal Answer
               </button>
             </div>
           ) : (
             <div className="w-full space-y-3" onClick={(e) => e.stopPropagation()}>
-              <div className="text-center font-display text-xs sm:text-sm font-black uppercase text-[#161616] tracking-wide">
-                HOW WELL DID YOU KNOW THIS?
+              <div className="text-center font-display text-xs sm:text-sm font-bold uppercase text-stone-800 tracking-wide">
+                How well did you know this?
               </div>
 
               {/* 4 Active Recall Rating Buttons */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <button
                   id="rating-did-not-know-btn"
                   onClick={() => handleRate('did_not_know')}
-                  className="py-2.5 px-2 bg-[#FFFFFF] hover:bg-red-50 text-red-700 font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] flex flex-col items-center justify-center gap-0.5"
+                  className="py-3 px-2 bg-red-50/70 hover:bg-red-100/80 text-red-700 font-display text-xs font-bold uppercase rounded-2xl border border-red-200 shadow-sm flex flex-col items-center justify-center gap-0.5 transition-all"
                 >
-                  <span>DID NOT KNOW</span>
-                  <span className="font-mono text-[9px] text-[#6B6862]">[1]</span>
+                  <span>Did Not Know</span>
+                  <span className="font-mono text-xs text-red-500 font-medium">[1]</span>
                 </button>
 
                 <button
                   id="rating-almost-btn"
                   onClick={() => handleRate('almost')}
-                  className="py-2.5 px-2 bg-[#FFFFFF] hover:bg-amber-50 text-amber-700 font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] flex flex-col items-center justify-center gap-0.5"
+                  className="py-3 px-2 bg-amber-50/70 hover:bg-amber-100/80 text-amber-700 font-display text-xs font-bold uppercase rounded-2xl border border-amber-200 shadow-sm flex flex-col items-center justify-center gap-0.5 transition-all"
                 >
-                  <span>ALMOST</span>
-                  <span className="font-mono text-[9px] text-[#6B6862]">[2]</span>
+                  <span>Almost</span>
+                  <span className="font-mono text-xs text-amber-500 font-medium">[2]</span>
                 </button>
 
                 <button
                   id="rating-knew-it-btn"
                   onClick={() => handleRate('knew_it')}
-                  className="py-2.5 px-2 bg-[#FFFFFF] hover:bg-emerald-50 text-emerald-800 font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] flex flex-col items-center justify-center gap-0.5"
+                  className="py-3 px-2 bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-800 font-display text-xs font-bold uppercase rounded-2xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center gap-0.5 transition-all"
                 >
-                  <span>KNEW IT</span>
-                  <span className="font-mono text-[9px] text-[#6B6862]">[3]</span>
+                  <span>Knew It</span>
+                  <span className="font-mono text-xs text-emerald-600 font-medium">[3]</span>
                 </button>
 
                 <button
                   id="rating-easy-btn"
                   onClick={() => handleRate('easy')}
-                  className="py-2.5 px-2 bg-[#D92B8A] hover:bg-[#BF1E75] text-white font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] flex flex-col items-center justify-center gap-0.5"
+                  className="py-3 px-2 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs font-bold uppercase rounded-2xl shadow-sm flex flex-col items-center justify-center gap-0.5 transition-all"
                 >
-                  <span>EASY</span>
-                  <span className="font-mono text-[9px] text-[#FDEAF4]">[4]</span>
+                  <span>Easy</span>
+                  <span className="font-mono text-xs text-pink-100 font-medium">[4]</span>
                 </button>
               </div>
             </div>
@@ -341,13 +344,13 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
           id="flashcard-prev-btn"
           onClick={handlePrev}
           disabled={currentIndex === 0}
-          className="px-4 py-2 bg-[#FFFFFF] disabled:opacity-40 disabled:pointer-events-none text-[#161616] font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5"
+          className="px-5 py-2.5 bg-white disabled:opacity-40 disabled:pointer-events-none text-stone-800 font-display text-xs font-bold uppercase rounded-full border border-stone-200 shadow-sm inline-flex items-center gap-1.5 hover:bg-stone-50 transition-all"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>PREVIOUS</span>
+          <span>Previous</span>
         </button>
 
-        <span className="text-[11px] font-mono text-[#6B6862]">
+        <span className="text-xs font-mono text-stone-600 hidden sm:inline font-medium">
           Shortcuts: Space (Flip), 1–4 (Rate), ← → (Navigate)
         </span>
 
@@ -355,9 +358,9 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
           id="flashcard-next-btn"
           onClick={handleNext}
           disabled={currentIndex === totalCards - 1}
-          className="px-4 py-2 bg-[#FFFFFF] disabled:opacity-40 disabled:pointer-events-none text-[#161616] font-display text-xs font-black uppercase rounded-md border-[2px] border-[#161616] shadow-[2px_2px_0px_#161616] active:translate-x-[1px] active:translate-y-[1px] inline-flex items-center gap-1.5"
+          className="px-5 py-2.5 bg-white disabled:opacity-40 disabled:pointer-events-none text-stone-800 font-display text-xs font-bold uppercase rounded-full border border-stone-200 shadow-sm inline-flex items-center gap-1.5 hover:bg-stone-50 transition-all"
         >
-          <span>NEXT</span>
+          <span>Next</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

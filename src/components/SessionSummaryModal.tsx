@@ -65,7 +65,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
             <div className="font-mono text-2xl font-black text-[#161616]">
               {result.total}
             </div>
-            <div className="font-display text-[10px] font-bold uppercase text-[#6B6862]">
+            <div className="font-display text-xs font-bold uppercase text-[#6B6862]">
               REVIEWED
             </div>
           </div>
@@ -74,7 +74,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
             <div className="font-mono text-2xl font-black text-emerald-700">
               {result.confident}
             </div>
-            <div className="font-display text-[10px] font-bold uppercase text-[#6B6862]">
+            <div className="font-display text-xs font-bold uppercase text-[#6B6862]">
               CONFIDENT
             </div>
           </div>
@@ -83,7 +83,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
             <div className="font-mono text-2xl font-black text-[#D92B8A]">
               {result.struggled}
             </div>
-            <div className="font-display text-[10px] font-bold uppercase text-[#6B6862]">
+            <div className="font-display text-xs font-bold uppercase text-[#6B6862]">
               NEED REVIEW
             </div>
           </div>
@@ -91,7 +91,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
 
         {/* Next Step Recommendation */}
         <div className="p-4 bg-[#FDEAF4] border-2 border-[#161616] rounded-xl text-left space-y-1">
-          <span className="font-mono text-[10px] font-bold uppercase text-[#D92B8A] block">
+          <span className="font-mono text-xs font-bold uppercase text-[#D92B8A] block">
             YOUR NEXT STEP
           </span>
           <p className="text-xs sm:text-sm text-[#161616] font-semibold">
@@ -144,7 +144,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-[#6B6862] uppercase tracking-wider block">
+                  <span className="text-xs font-mono font-bold text-[#6B6862] uppercase tracking-wider block">
                     FEEL READY TO TEST YOUR KNOWLEDGE?
                   </span>
                   <span className="font-display font-black text-xs uppercase text-[#161616] group-hover:text-[#D92B8A] flex items-center gap-1">

@@ -6,12 +6,17 @@ import {
   Sparkles, 
   CheckCircle2, 
   ArrowRight, 
+  ArrowLeft,
   Layers, 
   AlertTriangle,
   FolderOpen,
   Shuffle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  BrainCircuit,
+  Flame,
+  Check
 } from 'lucide-react';
 
 interface ReviewItemWrapper {
@@ -24,12 +29,14 @@ interface ReviewViewProps {
   reviewItems: StudyConcept[] | ReviewItemWrapper[];
   onStartReviewSession: (conceptsToReview: StudyConcept[], categoryName?: string) => void;
   onExploreSets: () => void;
+  onBack?: () => void;
 }
 
 export const ReviewView: React.FC<ReviewViewProps> = ({
   reviewItems,
   onStartReviewSession,
   onExploreSets,
+  onBack,
 }) => {
   const [activeTab, setActiveTab] = useState<'spaced' | 'interleaved'>('spaced');
 
@@ -55,7 +62,7 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
   const groupedByCategory = useMemo(() => {
     const map: Record<string, ReviewItemWrapper[]> = {};
     normalizedItems.forEach(item => {
-      const cat = item.concept.category || item.set?.category || 'GENERAL';
+      const cat = item.concept.category || item.set?.category || 'General';
       if (!map[cat]) map[cat] = [];
       map[cat].push(item);
     });
@@ -70,58 +77,74 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
   const totalCount = normalizedItems.length;
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Top Editorial Header */}
-      <div className="border-b-[2.5px] border-[#161616] pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#161616] text-[#FAF7F0] font-mono text-xs font-bold uppercase rounded-none mb-2">
-            <span>SPACED & INTERLEAVED RETENTION ENGINE</span>
+    <div id="review-view-root" className="max-w-5xl mx-auto space-y-8 pb-16">
+      {/* Back Button */}
+      {onBack && (
+        <button
+          id="review-back-btn"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+      )}
+
+      {/* Top Header */}
+      <div className="bg-white border border-stone-200/90 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-50 text-[#D92B8A] rounded-full border border-pink-200 font-mono text-xs font-bold uppercase">
+            <BrainCircuit className="w-3.5 h-3.5" />
+            <span>Spaced & Interleaved Retention Engine</span>
           </div>
-          <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[#161616]">
-            REVIEW QUEUE
+          <h1 className="font-display font-black text-2xl sm:text-4xl text-stone-900 tracking-tight">
+            Review Queue
           </h1>
-          <p className="text-sm sm:text-base text-[#6B6862] font-medium mt-1">
+          <p className="text-sm sm:text-base text-stone-600 font-normal leading-relaxed">
             {totalCount > 0
-              ? `${totalCount} ${totalCount === 1 ? 'concept needs' : 'concepts need'} active reinforcement to solidify into long-term memory.`
-              : 'Your review queue is currently clear! Review interleaved concepts across topics below.'}
+              ? `${totalCount} ${totalCount === 1 ? 'concept needs' : 'concepts need'} active reinforcement to solidify into permanent long-term memory.`
+              : 'Your review queue is currently clear! Solidify mastery across topics using interleaved practice below.'}
           </p>
         </div>
 
         {totalCount > 0 && (
           <button
+            id="start-all-spaced-review-btn"
             onClick={() => onStartReviewSession(normalizedItems.map(r => r.concept))}
-            className="px-6 py-3 bg-[#D92B8A] text-white font-display text-xs sm:text-sm font-black tracking-wider uppercase rounded-none tactile-btn flex items-center justify-center gap-2 whitespace-nowrap self-start sm:self-auto"
+            className="px-6 py-3.5 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-bold uppercase rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap self-start md:self-auto active:scale-95"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>START SPACED REVIEW ({totalCount})</span>
+            <span>Start Spaced Review ({totalCount})</span>
           </button>
         )}
       </div>
 
       {/* Mode Selector Tabs */}
-      <div className="flex gap-2 border-b-2 border-[#161616]">
+      <div className="flex bg-stone-100/80 p-1.5 rounded-full border border-stone-200/80 max-w-md">
         <button
+          id="tab-spaced-review"
           onClick={() => setActiveTab('spaced')}
-          className={`px-5 py-2.5 font-display text-xs sm:text-sm font-black uppercase tracking-wider border-t-2 border-x-2 transition-all flex items-center gap-2 ${
+          className={`flex-1 py-2.5 px-4 font-display text-xs sm:text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2 ${
             activeTab === 'spaced'
-              ? 'bg-white text-[#161616] border-[#161616] -mb-[2px] shadow-[2px_0px_0px_#161616]'
-              : 'bg-[#FAF7F0] text-[#6B6862] border-transparent hover:text-[#161616]'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <RotateCcw className="w-4 h-4 text-[#D92B8A]" />
-          <span>SPACED REVIEW QUEUE ({totalCount})</span>
+          <span>Spaced Queue ({totalCount})</span>
         </button>
 
         <button
+          id="tab-interleaved-review"
           onClick={() => setActiveTab('interleaved')}
-          className={`px-5 py-2.5 font-display text-xs sm:text-sm font-black uppercase tracking-wider border-t-2 border-x-2 transition-all flex items-center gap-2 ${
+          className={`flex-1 py-2.5 px-4 font-display text-xs sm:text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2 ${
             activeTab === 'interleaved'
-              ? 'bg-white text-[#161616] border-[#161616] -mb-[2px] shadow-[2px_0px_0px_#161616]'
-              : 'bg-[#FAF7F0] text-[#6B6862] border-transparent hover:text-[#161616]'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <Shuffle className="w-4 h-4 text-[#D92B8A]" />
-          <span>INTERLEAVED MULTI-TOPIC ({interleavedConcepts.length})</span>
+          <span>Interleaved ({interleavedConcepts.length})</span>
         </button>
       </div>
 
@@ -129,72 +152,84 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
       {activeTab === 'spaced' && (
         <>
           {totalCount === 0 ? (
-            <div className="bg-[#FFFFFF] border-2 border-[#161616] rounded-none p-8 sm:p-12 text-center space-y-4 shadow-[5px_5px_0px_#161616]">
-              <div className="w-16 h-16 mx-auto rounded-full bg-green-50 border-2 border-[#161616] flex items-center justify-center text-green-700 shadow-[2px_2px_0px_#161616]">
+            <div className="bg-white border border-stone-200 rounded-3xl p-8 sm:p-14 text-center space-y-5 shadow-sm">
+              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-xs">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h2 className="font-display font-black text-2xl uppercase text-[#161616]">
-                ALL CAUGHT UP!
-              </h2>
-              <p className="text-xs sm:text-sm text-[#6B6862] max-w-md mx-auto">
-                You don&apos;t have any flagged concepts in your review queue right now. As you rate flashcards, any concepts you need to revisit will appear here automatically.
-              </p>
+              <div className="space-y-2 max-w-lg mx-auto">
+                <h2 className="font-display font-black text-2xl sm:text-3xl text-stone-900">
+                  All Caught Up!
+                </h2>
+                <p className="text-sm text-stone-600 leading-relaxed font-normal">
+                  You don&apos;t have any flagged concepts in your review queue right now. As you rate flashcards, any concepts you need to revisit will appear here automatically.
+                </p>
+              </div>
               <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
                 <button
+                  id="empty-interleaved-practice-btn"
                   onClick={() => onStartReviewSession(interleavedConcepts, 'Interleaved Practice')}
-                  className="px-6 py-3 bg-[#D92B8A] text-white font-display text-xs sm:text-sm font-black uppercase rounded-none tactile-btn inline-flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-bold uppercase rounded-full shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <Shuffle className="w-4 h-4" />
-                  <span>TRY INTERLEAVED PRACTICE</span>
+                  <span>Try Interleaved Practice</span>
                 </button>
                 <button
+                  id="empty-explore-sets-btn"
                   onClick={onExploreSets}
-                  className="px-6 py-3 bg-white border-2 border-[#161616] text-[#161616] font-display text-xs sm:text-sm font-black uppercase rounded-none tactile-btn inline-flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-display text-xs sm:text-sm font-bold uppercase rounded-full shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <FolderOpen className="w-4 h-4" />
-                  <span>EXPLORE STUDY SETS</span>
+                  <FolderOpen className="w-4 h-4 text-stone-600" />
+                  <span>Explore Study Sets</span>
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-6">
               {(Object.entries(groupedByCategory) as [string, ReviewItemWrapper[]][]).map(([category, items]) => (
-                <div key={category} className="bg-white border-2 border-[#161616] rounded-none p-5 sm:p-6 shadow-[4px_4px_0px_#161616] space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#161616]/15 pb-3">
+                <div 
+                  key={category} 
+                  className="bg-white border border-stone-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4">
                     <div>
-                      <span className="font-mono text-[10px] font-bold text-[#D92B8A] uppercase">
-                        SUBJECT CATEGORY
+                      <span className="font-mono text-xs font-bold text-[#D92B8A] uppercase">
+                        Subject Category
                       </span>
-                      <h3 className="font-display font-black text-lg uppercase text-[#161616]">
-                        {category} ({items.length} {items.length === 1 ? 'Concept' : 'Concepts'})
+                      <h3 className="font-display font-black text-xl text-stone-900">
+                        {category} <span className="text-stone-500 font-mono text-sm font-normal">({items.length} {items.length === 1 ? 'Concept' : 'Concepts'})</span>
                       </h3>
                     </div>
 
                     <button
                       onClick={() => onStartReviewSession(items.map(i => i.concept), category)}
-                      className="px-4 py-2 bg-[#161616] text-white font-display text-xs font-black uppercase tracking-wider rounded-none tactile-btn flex items-center gap-1.5"
+                      className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-display text-xs font-bold uppercase rounded-full shadow-xs flex items-center gap-2 transition-all self-start sm:self-auto active:scale-95"
                     >
-                      <span>REVIEW THIS SUBJECT</span>
+                      <span>Review Subject</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {items.map(({ concept, performance, set }) => (
-                      <div key={concept.id} className="p-4 bg-[#FAF7F0] border-2 border-[#161616] space-y-2 shadow-[2px_2px_0px_#161616]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {items.map(({ concept, set }) => (
+                      <div 
+                        key={concept.id} 
+                        className="p-5 bg-stone-50/60 border border-stone-200/90 rounded-2xl space-y-2.5 shadow-xs hover:border-pink-200 hover:bg-white transition-all"
+                      >
                         <div className="flex items-start justify-between gap-2">
-                          <span className="font-display font-bold text-sm sm:text-base uppercase text-[#161616]">
+                          <span className="font-display font-bold text-base text-stone-900">
                             {concept.title}
                           </span>
-                          <span className="font-mono text-xs font-bold px-2 py-0.5 bg-red-100 border border-red-800 text-red-800 uppercase whitespace-nowrap">
+                          <span className="font-mono text-xs font-bold px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 uppercase rounded-full whitespace-nowrap">
                             Needs Review
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-[#2C2C2A] leading-relaxed line-clamp-3">
+                        <p className="text-sm text-stone-600 leading-relaxed line-clamp-3 font-normal">
                           {concept.summary}
                         </p>
-                        <div className="font-mono text-xs text-[#6B6862] pt-1">
-                          From set: <span className="font-bold text-[#161616]">{set?.title || concept.category || 'Study Set'}</span>
+                        <div className="font-mono text-xs text-stone-500 pt-1 flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-[#D92B8A]" />
+                          <span>Set:</span>
+                          <span className="font-bold text-stone-800 truncate">{set?.title || concept.category || 'Study Set'}</span>
                         </div>
                       </div>
                     ))}
@@ -208,63 +243,71 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
 
       {/* TAB 2: INTERLEAVED MULTI-TOPIC REVIEW */}
       {activeTab === 'interleaved' && (
-        <div className="bg-white border-2 border-[#161616] p-6 sm:p-8 rounded-none shadow-[5px_5px_0px_#161616] space-y-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#FDEAF4] text-[#D92B8A] font-mono text-[10px] font-bold uppercase border border-[#D92B8A]">
-              <span>COGNITIVE SCIENCE PRINCIPLE</span>
+        <div className="bg-white border border-stone-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="space-y-2 border-b border-stone-100 pb-5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-pink-50 text-[#D92B8A] font-mono text-xs font-bold uppercase rounded-full border border-pink-200">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Cognitive Science Principle</span>
             </div>
-            <h2 className="font-display font-black text-2xl uppercase text-[#161616]">
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-stone-900">
               Why Interleaved Review Works
             </h2>
-            <p className="text-xs sm:text-sm text-[#6B6862] max-w-2xl font-medium leading-relaxed">
+            <p className="text-sm text-stone-600 max-w-3xl leading-relaxed font-normal">
               Practicing multiple topics mixed together forces your brain to continually discriminate between concepts, preventing the false sense of mastery caused by single-topic repetition.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
             {interleavedConcepts.map((concept, idx) => (
-              <div key={concept.id} className="p-3 bg-[#FAF7F0] border border-[#161616] space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-[10px] text-[#D92B8A]">
-                    {(idx + 1).toString().padStart(2, '0')}
-                  </span>
-                  <span className="font-mono text-[9px] px-1.5 py-0.5 bg-white border border-[#161616] uppercase">
-                    {concept.category}
-                  </span>
+              <div 
+                key={concept.id} 
+                className="p-4 bg-stone-50/60 border border-stone-200/90 rounded-2xl space-y-2 shadow-xs hover:bg-white hover:border-pink-200 transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs bg-pink-50 text-[#D92B8A] border border-pink-200 px-2 py-0.5 rounded-full">
+                      {(idx + 1).toString().padStart(2, '0')}
+                    </span>
+                    <span className="font-mono text-xs px-2.5 py-0.5 bg-white border border-stone-200 uppercase rounded-full text-stone-700 font-bold">
+                      {concept.category}
+                    </span>
+                  </div>
+                  <h4 className="font-display font-bold text-sm text-stone-900 truncate">
+                    {concept.title}
+                  </h4>
+                  <p className="text-sm text-stone-600 line-clamp-2 leading-relaxed font-normal">
+                    {concept.summary}
+                  </p>
                 </div>
-                <h4 className="font-display font-black text-xs uppercase text-[#161616] truncate">
-                  {concept.title}
-                </h4>
-                <p className="text-[11px] text-[#6B6862] line-clamp-2">
-                  {concept.summary}
-                </p>
               </div>
             ))}
           </div>
 
-          <div className="pt-3 border-t border-[#161616]/15 flex justify-end">
+          <div className="pt-4 border-t border-stone-100 flex justify-end">
             <button
+              id="start-interleaved-btn"
               onClick={() => onStartReviewSession(interleavedConcepts, 'Interleaved Multi-Topic Session')}
-              className="px-6 py-3 bg-[#D92B8A] text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-none tactile-btn flex items-center gap-2"
+              className="px-7 py-3 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-bold uppercase rounded-full shadow-md flex items-center gap-2 transition-all active:scale-95"
             >
               <Shuffle className="w-4 h-4" />
-              <span>START INTERLEAVED SESSION ({interleavedConcepts.length} CONCEPTS) →</span>
+              <span>Start Interleaved Session ({interleavedConcepts.length} Concepts)</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* QUIZ CONNECTION (Optional CTA) */}
-      <div className="bg-[#FAF7F0] border-2 border-[#161616] p-5 sm:p-6 rounded-none shadow-[4px_4px_0px_#161616] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#161616] text-[#FAF7F0] font-mono text-[10px] font-bold uppercase">
-            <span>SEPARATE PLATFORM</span>
+      {/* QUIZ PLATFORM COMPANION CALLOUT */}
+      <div className="bg-stone-50/80 border border-stone-200 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <div className="space-y-1.5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-stone-200 text-stone-700 font-mono text-xs font-bold uppercase rounded-full">
+            <span>External Practice</span>
           </div>
-          <h3 className="font-display font-black text-lg uppercase text-[#161616]">
-            READY TO TEST YOUR KNOWLEDGE?
+          <h3 className="font-display font-bold text-lg sm:text-xl text-stone-900">
+            Ready to Test Your Timed Knowledge?
           </h3>
-          <p className="text-xs text-[#6B6862]">
-            Take the timed quiz on the separate Proudly Afrikan Quiz platform.
+          <p className="text-sm text-stone-600 font-normal max-w-xl">
+            Take timed quizzes and global challenges on the Proudly Afrikan Quiz platform.
           </p>
         </div>
 
@@ -272,9 +315,9 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
           href="https://proudlyafrikan.com/quiz"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full sm:w-auto px-5 py-2.5 bg-[#FFFFFF] border-2 border-[#161616] text-[#161616] hover:bg-[#D92B8A] hover:text-white font-display text-xs font-black uppercase tracking-wider rounded-none shadow-[2px_2px_0px_#161616] transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+          className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-pink-50 border border-stone-200 text-stone-900 hover:text-[#D92B8A] hover:border-pink-300 font-display text-xs font-bold uppercase rounded-full shadow-xs transition-all flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
         >
-          <span>TAKE THE PROUDLY AFRIKAN QUIZ →</span>
+          <span>Take the Quiz</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>

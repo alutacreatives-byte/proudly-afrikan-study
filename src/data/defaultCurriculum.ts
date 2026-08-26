@@ -600,5 +600,180 @@ Unlike simplistic anti-colonial polemics, Achebe created in Okonkwo a classical 
         practiceExplanation: 'Achebe emphasized that in Igbo conversation, proverbs provide the essential philosophical context, wisdom, and respect required for civil communication.'
       }
     ]
+  },
+  {
+    id: 'math-science-calculus',
+    title: 'Calculus: Rates of Change & Integrals',
+    description: 'Master differential and integral calculus: limits, tangent slopes, derivatives, optimization, and the Fundamental Theorem of Calculus.',
+    category: 'Mathematics & Science',
+    estimatedMinutes: 15,
+    featured: true,
+    createdAt: '2026-01-15',
+    concepts: [
+      {
+        id: 'derivative-rate-of-change',
+        setId: 'math-science-calculus',
+        title: 'The Derivative as Instantaneous Rate of Change',
+        summary: 'The derivative f\'(x) measures the exact instantaneous slope or rate at which a function\'s output changes relative to its input at a single infinitesimal point.',
+        category: 'Mathematics & Science',
+        difficulty: 'Medium',
+        tags: ['Calculus', 'Derivatives', 'Slope', 'Rates of Change'],
+        explanation: 'In algebra, the average rate of change between two points on a curve is found using the secant line slope Δy/Δx. In calculus, by taking the limit as the distance Δx approaches zero (lim Δx→0 [f(x+Δx) - f(x)] / Δx), the secant line converges into the tangent line. This produces the derivative—the instantaneous rate of change at that exact coordinate.',
+        keyFacts: [
+          'Calculus was independently developed in the 17th century by Isaac Newton and Gottfried Wilhelm Leibniz.',
+          'The notation dy/dx is Leibniz notation, while f\'(x) is Lagrange notation.',
+          'If position is s(t), its first derivative is velocity v(t), and its second derivative is acceleration a(t).',
+          'A zero derivative (f\'(x) = 0) often indicates a local maximum, minimum, or inflection point.'
+        ],
+        terminology: [
+          { term: 'Secant Line', definition: 'A line that passes through two distinct points on a curve, measuring average rate of change.' },
+          { term: 'Tangent Line', definition: 'A straight line that touches a curve at exactly one point without crossing it locally, representing the instantaneous derivative slope.' },
+          { term: 'Limit', definition: 'The value that a function approaches as the input gets arbitrarily close to a specified point.' }
+        ],
+        whyItMatters: 'Derivatives are the mathematical foundation for analyzing dynamic systems across physics, machine learning gradient descent, engineering mechanics, and financial risk modeling.',
+        historicalContext: 'Newton developed calculus to calculate planetary orbits and gravity, while Leibniz sought a universal symbolic calculus for all human reasoning.',
+        simpleExplanation: 'Average speed is looking at your watch after driving 100 km in 2 hours (50 km/h). The derivative is looking at your speedometer at the exact millisecond you hit the gas pedal.',
+        flashcardQuestion: 'What does the first derivative f\'(x) geometrically represent on the graph of a function?',
+        flashcardAnswer: 'The slope of the tangent line to the function at that exact point x, which represents the instantaneous rate of change.',
+        flashcardHint: 'Think about tangent line slope.',
+        practiceQuestion: 'If the position of a moving vehicle is given by s(t) = 3t² + 2t, what is the instantaneous velocity v(t) at time t = 4 seconds?',
+        practiceOptions: [
+          '26 m/s',
+          '56 m/s',
+          '14 m/s',
+          '38 m/s'
+        ],
+        correctOptionIndex: 0,
+        practiceExplanation: 'Velocity is the derivative of position: v(t) = s\'(t) = 6t + 2. At t = 4, v(4) = 6(4) + 2 = 24 + 2 = 26 m/s.'
+      },
+      {
+        id: 'fundamental-theorem-calculus',
+        setId: 'math-science-calculus',
+        title: 'The Fundamental Theorem of Calculus',
+        summary: 'The Fundamental Theorem establishes the profound bridge connecting differentiation (slopes) with integration (accumulation/area under curves).',
+        category: 'Mathematics & Science',
+        difficulty: 'Advanced',
+        tags: ['Calculus', 'Integrals', 'Fundamental Theorem', 'Area Under Curve'],
+        explanation: 'Before calculus, finding the slope of a curve (differentiation) and calculating the area trapped beneath a curve (integration) were viewed as entirely unrelated mathematical problems. The Fundamental Theorem of Calculus proved that differentiation and integration are inverse operations: integrating a rate of change function f(t) from a to b yields the net change F(b) - F(a) of the antiderivative.',
+        keyFacts: [
+          'Part 1 states that d/dx [∫ from a to x f(t) dt] = f(x).',
+          'Part 2 states that ∫ from a to b f(x) dx = F(b) - F(a), where F\'(x) = f(x).',
+          'It replaces arduous Riemann sum approximations with elegant antiderivative evaluation.',
+          'Used to compute work done by variable forces, total probability, and continuous asset growth.'
+        ],
+        terminology: [
+          { term: 'Antiderivative', definition: 'A differentiable function F whose derivative is equal to the original function f (F\'(x) = f(x)).' },
+          { term: 'Definite Integral', definition: 'The signed area between a curve and the x-axis over an interval [a, b].' },
+          { term: 'Riemann Sum', definition: 'An approximation of the area under a curve by dividing it into thin vertical rectangles.' }
+        ],
+        whyItMatters: 'Without the Fundamental Theorem, modern engineering, rocket trajectory planning, electromagnetism, and statistical distributions would be computationally impossible.',
+        simpleExplanation: 'It proves that adding up tiny slices of continuous change (integration) is the exact opposite undo-button of finding the instantaneous speed of change (derivatives).',
+        flashcardQuestion: 'How does the Fundamental Theorem of Calculus connect derivatives and integrals?',
+        flashcardAnswer: 'It proves that differentiation and integration are inverse operations, allowing the area under a curve (definite integral) to be calculated using antiderivatives F(b) - F(a).',
+        flashcardHint: 'They are inverse mathematical operations.',
+        practiceQuestion: 'What is the value of the definite integral ∫ from 0 to 3 of (2x) dx?',
+        practiceOptions: [
+          '9',
+          '6',
+          '18',
+          '3'
+        ],
+        correctOptionIndex: 0,
+        practiceExplanation: 'The antiderivative of 2x is x². Evaluating from 0 to 3 gives F(3) - F(0) = 3² - 0² = 9 - 0 = 9.'
+      }
+    ]
+  },
+  {
+    id: 'tech-algorithms-ai',
+    title: 'Algorithms, Data Structures & Computational Logic',
+    description: 'Master Big-O asymptotic analysis, hash tables, binary search trees, dynamic programming, and machine learning foundations.',
+    category: 'Technology & Computer Science',
+    estimatedMinutes: 15,
+    featured: true,
+    createdAt: '2026-01-18',
+    concepts: [
+      {
+        id: 'big-o-complexity',
+        setId: 'tech-algorithms-ai',
+        title: 'Big-O Asymptotic Complexity & Efficiency',
+        summary: 'Big-O notation quantifies how the runtime or memory requirements of an algorithm scale as the input size n grows toward infinity.',
+        category: 'Technology & Computer Science',
+        difficulty: 'Medium',
+        tags: ['Computer Science', 'Algorithms', 'Big-O', 'Data Structures'],
+        explanation: 'In computer science, measuring runtime in seconds is unreliable because hardware speeds vary. Big-O notation provides a hardware-independent mathematical classification of an algorithm’s worst-case time or space complexity. Key classifications range from O(1) constant time, O(log n) logarithmic, O(n) linear, O(n log n) linearithmic (efficient sorts), to O(n²) quadratic and O(2ⁿ) exponential.',
+        keyFacts: [
+          'Hash table lookups average O(1) constant time.',
+          'Binary search on a sorted array achieves O(log n) time.',
+          'Merge Sort and Quick Sort (average) run in O(n log n) time.',
+          'Nested loops over the same input array typically result in O(n²) quadratic time.'
+        ],
+        terminology: [
+          { term: 'Time Complexity', definition: 'A measure of the number of computational operations an algorithm executes as input size n increases.' },
+          { term: 'Space Complexity', definition: 'The auxiliary memory overhead allocated by an algorithm during execution.' },
+          { term: 'Asymptotic Analysis', definition: 'Evaluating an algorithm\'s behavior in the limiting case where input size approaches infinity.' }
+        ],
+        whyItMatters: 'An O(n²) algorithm may take hours on 1 million records, while an O(n log n) algorithm finishes in milliseconds. Scalable software engineering requires rigorous asymptotic discipline.',
+        simpleExplanation: 'Big-O is like rating recipes by how much longer they take when you cook for 1,000 guests instead of 1: constant time is instant like boiling water, while exponential time takes until the end of the universe.',
+        flashcardQuestion: 'Why is binary search able to achieve O(log n) time complexity on sorted arrays?',
+        flashcardAnswer: 'Because at each step it compares the target with the middle element and cuts the remaining search space in half (divide-and-conquer).',
+        flashcardHint: 'It cuts the search space in half each iteration.',
+        practiceQuestion: 'Which time complexity class represents the most efficient asymptotic scaling for large inputs n?',
+        practiceOptions: [
+          'O(log n)',
+          'O(n)',
+          'O(n²)',
+          'O(n log n)'
+        ],
+        correctOptionIndex: 0,
+        practiceExplanation: 'Logarithmic time O(log n) grows far slower than linear O(n), linearithmic O(n log n), or polynomial O(n²), making it the most efficient among the choices.'
+      }
+    ]
+  },
+  {
+    id: 'african-proverbs-wisdom',
+    title: 'African Proverbs & Wisdom Traditions',
+    description: 'Explore the philosophical foundations, ethical codes, conflict resolution, and metaphorical richness of African proverbs and orature.',
+    category: 'African Knowledge',
+    estimatedMinutes: 12,
+    featured: true,
+    createdAt: '2026-01-20',
+    concepts: [
+      {
+        id: 'ubuntu-philosophy-proverbs',
+        setId: 'african-proverbs-wisdom',
+        title: 'Ubuntu Philosophy: "I Am Because We Are"',
+        summary: 'Ubuntu (or Umuntu ngumuntu ngabantu) is the humanistic African worldview affirming that individual personhood is realized only through communal interconnectedness.',
+        category: 'African Knowledge',
+        difficulty: 'Easy',
+        tags: ['Ubuntu', 'Philosophy', 'Ethics', 'Proverbs'],
+        explanation: 'Originating in Bantu languages, the aphorism "Umuntu ngumuntu ngabantu" (a person is a person through other persons) encapsulates Ubuntu. It posits that human dignity, morality, and purpose do not exist in solitary isolation (countering Cartesian "I think therefore I am"), but in reciprocal empathy, communal responsibility, hospitality, and restorative justice.',
+        keyFacts: [
+          'Championed globally by Archbishop Desmond Tutu and Nelson Mandela during the South African Truth and Reconciliation Commission.',
+          'Known in Shona as "Unhu", in Kikuyu as "Utu", in Akan as "Nipa bɔne nka baako", and in Wolof as "Nit, nit ay garabam" (Man is the medicine of man).',
+          'Prioritizes restorative justice (healing communal relations) over purely retributive punitive justice.',
+          'Emphasizes shared humanity, generous consensus-building, and intergenerational stewardship.'
+        ],
+        terminology: [
+          { term: 'Ubuntu', definition: 'Humaneness; the philosophical recognition of the universal bond of sharing that connects all humanity.' },
+          { term: 'Restorative Justice', definition: 'A legal and ethical approach focusing on repairing harm caused to relationships and the collective community.' },
+          { term: 'Orature', definition: 'The body of oral poetry, proverbs, historical epics, and philosophical narratives passed down through speech.' }
+        ],
+        whyItMatters: 'Ubuntu provides a potent antidote to hyper-individualism, offering a time-tested framework for conflict mediation, collaborative leadership, and global ethics.',
+        simpleExplanation: '"A person is a person because of other people." You cannot be fully happy, wise, or human in isolation; we thrive when we lift each other up.',
+        flashcardQuestion: 'What is the core philosophical meaning of the Zulu/Xhosa proverb "Umuntu ngumuntu ngabantu" (Ubuntu)?',
+        flashcardAnswer: '"A person is a person through other persons" — affirming that individual humanity, dignity, and flourishing are realized through communal connection and mutual care.',
+        flashcardHint: 'Think about communal interconnectedness vs isolated individualism.',
+        practiceQuestion: 'How does Ubuntu philosophy influence traditional African conflict resolution and justice?',
+        practiceOptions: [
+          'It emphasizes restorative justice and healing relationships over purely retributive punishment',
+          'It requires complete banishment of any citizen who disagrees with the elders',
+          'It forbids any community discussions of wrongdoing',
+          'It mandates strict solitary confinement'
+        ],
+        correctOptionIndex: 0,
+        practiceExplanation: 'Ubuntu centers community harmony and mutual restoration, seeking to repair social fractures and rehabilitate offenders rather than merely inflicting retributive punishment.'
+      }
+    ]
   }
 ];
+

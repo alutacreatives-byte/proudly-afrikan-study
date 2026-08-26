@@ -19,12 +19,17 @@ import { StudyPlanView } from './components/StudyPlanView';
 import { ReviewView } from './components/ReviewView';
 import { ProgressView } from './components/ProgressView';
 import { ArchiveView } from './components/ArchiveView';
-import { CreateSetModal } from './components/CreateSetModal';
+import { CreateSetModal, GeneratorMode, InputMethod } from './components/CreateSetModal';
 import { StudySetDetailView } from './components/StudySetDetailView';
 import { SessionSummaryModal } from './components/SessionSummaryModal';
+import { StudyTutorModal } from './components/StudyTutorModal';
+import { HomeworkView } from './components/HomeworkView';
+import { CreateView } from './components/CreateView';
+import { StudyHubView } from './components/StudyHubView';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('home');
+  const [viewHistory, setViewHistory] = useState<AppView[]>(['home']);
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => StorageService.getCurrentUser());
   const [studySets, setStudySets] = useState<StudySet[]>([]);
   const [activeSet, setActiveSet] = useState<StudySet | null>(null);
@@ -32,6 +37,13 @@ export default function App() {
   const [reviewItems, setReviewItems] = useState(StorageService.getConceptsNeedingReview());
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [createModalMethod, setCreateModalMethod] = useState<InputMethod>('topic');
+  const [createModalTopic, setCreateModalTopic] = useState<string>('');
+  const [createModalMode, setCreateModalMode] = useState<GeneratorMode>('lesson-plan');
+
+  const [isGlobalTutorOpen, setIsGlobalTutorOpen] = useState<boolean>(false);
+  const [globalTutorInitialMode, setGlobalTutorInitialMode] = useState<'tutor' | 'homework'>('homework');
+  const [explorerCategory, setExplorerCategory] = useState<string>('ALL SUBJECTS');
   const [sessionSummary, setSessionSummary] = useState<{
     isOpen: boolean;
     total: number;
@@ -73,21 +85,49 @@ export default function App() {
   // Navigation & Set Selection
   const handleSelectSet = (set: StudySet, targetMode?: AppView) => {
     setActiveSet(set);
-    if (targetMode) {
-      setCurrentView(targetMode);
-    } else {
-      setCurrentView('set-detail');
-    }
+    const nextView = targetMode || 'set-detail';
+    setViewHistory(prev => (prev[prev.length - 1] === nextView ? prev : [...prev, nextView]));
+    setCurrentView(nextView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavigate = (view: AppView) => {
+  const handleNavigate = (view: AppView, categoryFilter?: string) => {
+    if (categoryFilter) {
+      setExplorerCategory(categoryFilter);
+    }
     // If navigating directly to a mode that needs an active set, ensure activeSet is set
     if (['study', 'flashcards', 'practice'].includes(view) && !activeSet && studySets.length > 0) {
       setActiveSet(studySets[0]);
     }
+    setViewHistory(prev => (prev[prev.length - 1] === view ? prev : [...prev, view]));
     setCurrentView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleGoBack = () => {
+    setViewHistory(prev => {
+      if (prev.length > 1) {
+        const nextHistory = prev.slice(0, -1);
+        const previousView = nextHistory[nextHistory.length - 1];
+        setCurrentView(previousView);
+        return nextHistory;
+      } else {
+        setCurrentView('home');
+        return ['home'];
+      }
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenCreateModal = (
+    method: InputMethod = 'topic',
+    topic: string = '',
+    mode: GeneratorMode = 'lesson-plan'
+  ) => {
+    setCreateModalMethod(method);
+    setCreateModalTopic(topic);
+    setCreateModalMode(mode);
+    setIsCreateModalOpen(true);
   };
 
   // Recording interactions
@@ -209,6 +249,11 @@ export default function App() {
     }
   };
 
+  const handleOpenGlobalTutor = (mode: 'tutor' | 'homework' = 'homework') => {
+    setGlobalTutorInitialMode(mode);
+    setIsGlobalTutorOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7F0] text-[#161616] flex flex-col selection:bg-[#D92B8A] selection:text-white">
       {/* Primary Brand Header */}
@@ -217,7 +262,8 @@ export default function App() {
         onNavigate={handleNavigate}
         stats={stats}
         reviewCount={reviewItems.length}
-        onCreateSetClick={() => setIsCreateModalOpen(true)}
+        onCreateSetClick={(method, topic) => handleOpenCreateModal(method || 'topic', topic || '')}
+        onOpenTutor={handleOpenGlobalTutor}
         currentUser={currentUser}
         onLogout={() => {
           const guest = StorageService.logoutUser();
@@ -226,7 +272,7 @@ export default function App() {
       />
 
       {/* Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {currentView === 'home' && (
           <HomeScreen
             onNavigate={handleNavigate}
@@ -234,7 +280,8 @@ export default function App() {
             featuredSets={featuredSets}
             reviewItemsCount={reviewItems.length}
             stats={stats}
-            onCreateSetClick={() => setIsCreateModalOpen(true)}
+            onCreateSetClick={(method, topic, mode) => handleOpenCreateModal(method || 'topic', topic || '', mode || 'lesson-plan')}
+            onOpenTutor={handleOpenGlobalTutor}
             onStartReview={() => {
               if (reviewItems.length > 0) {
                 handleStartReviewSession(reviewItems.map(r => r.concept));
@@ -246,32 +293,69 @@ export default function App() {
           />
         )}
 
+        {currentView === 'create' && (
+          <CreateView
+            onNavigate={handleNavigate}
+            onCreateSetClick={(method, topic, mode) => handleOpenCreateModal(method || 'topic', topic || '', mode || 'lesson-plan')}
+            onSelectSet={handleSelectSet}
+            featuredSets={featuredSets}
+            onBack={handleGoBack}
+          />
+        )}
+
+        {(currentView === 'study-hub' || (currentView === 'study' && !activeSet)) && (
+          <StudyHubView
+            studySets={studySets}
+            activeSet={activeSet}
+            onSelectSet={handleSelectSet}
+            onNavigate={handleNavigate}
+            reviewItemsCount={reviewItems.length}
+            stats={stats}
+            onCreateSetClick={() => handleOpenCreateModal('topic', '')}
+            onBack={handleGoBack}
+          />
+        )}
+
+        {currentView === 'homework' && (
+          <HomeworkView
+            studySets={studySets}
+            activeSet={activeSet}
+            onSelectSet={handleSelectSet}
+            onNavigate={handleNavigate}
+            onBack={handleGoBack}
+          />
+        )}
+
         {currentView === 'archive' && (
           <ArchiveView
             currentUser={currentUser}
             studySets={studySets}
             onSelectSet={handleSelectSet}
-            onExploreSets={() => setCurrentView('sets')}
+            onExploreSets={() => handleNavigate('sets')}
             onUserChanged={handleUserChanged}
+            onBack={handleGoBack}
           />
         )}
 
         {currentView === 'sets' && (
           <SubjectExplorer
             studySets={studySets}
+            initialCategory={explorerCategory}
             onSelectSet={handleSelectSet}
-            onCreateSetClick={() => setIsCreateModalOpen(true)}
+            onCreateSetClick={() => handleOpenCreateModal('topic', '')}
             onDeleteCustomSet={handleDeleteCustomSet}
+            onOpenTutor={handleOpenGlobalTutor}
+            onBack={handleGoBack}
           />
         )}
 
         {currentView === 'set-detail' && activeSet && (
           <StudySetDetailView
             studySet={activeSet}
-            onBack={() => setCurrentView('sets')}
-            onLaunchMode={(mode) => setCurrentView(mode)}
+            onBack={handleGoBack}
+            onLaunchMode={(mode) => handleNavigate(mode)}
             onLaunchConceptLesson={(conceptIndex) => {
-              setCurrentView('study');
+              handleNavigate('study');
             }}
           />
         )}
@@ -279,7 +363,7 @@ export default function App() {
         {currentView === 'study' && activeSet && (
           <StudySessionView
             studySet={activeSet}
-            onBack={() => setCurrentView('set-detail')}
+            onBack={() => handleNavigate('home')}
             onFinishLesson={(setId, count) => {
               handleCompleteGuidedStudy({
                 total: activeSet.concepts.length,
@@ -289,12 +373,10 @@ export default function App() {
               });
             }}
             onNavigateToFlashcards={(set) => {
-              setActiveSet(set);
-              setCurrentView('flashcards');
+              handleSelectSet(set, 'flashcards');
             }}
             onNavigateToPractice={(set) => {
-              setActiveSet(set);
-              setCurrentView('practice');
+              handleSelectSet(set, 'practice');
             }}
           />
         )}
@@ -302,7 +384,7 @@ export default function App() {
         {currentView === 'flashcards' && activeSet && (
           <FlashcardsView
             studySet={activeSet}
-            onBack={() => setCurrentView('set-detail')}
+            onBack={handleGoBack}
             onRecordRating={handleRecordFlashcardRating}
             onCompleteSession={handleCompleteFlashcards}
           />
@@ -311,7 +393,7 @@ export default function App() {
         {currentView === 'practice' && activeSet && (
           <PracticeView
             studySet={activeSet}
-            onBack={() => setCurrentView('set-detail')}
+            onBack={handleGoBack}
             onRecordAnswer={handleRecordPracticeAnswer}
             onCompletePractice={(result) => {
               handleCompletePractice({
@@ -321,8 +403,7 @@ export default function App() {
               });
             }}
             onNavigateToFlashcards={(set) => {
-              setActiveSet(set);
-              setCurrentView('flashcards');
+              handleSelectSet(set, 'flashcards');
             }}
           />
         )}
@@ -340,9 +421,10 @@ export default function App() {
                 concepts: concepts,
               };
               setActiveSet(planSet);
-              setCurrentView('study');
+              handleNavigate('study');
             }}
-            onExploreSets={() => setCurrentView('sets')}
+            onExploreSets={() => handleNavigate('sets')}
+            onBack={handleGoBack}
           />
         )}
 
@@ -350,31 +432,36 @@ export default function App() {
           <ReviewView
             reviewItems={reviewItems}
             onStartReviewSession={handleStartReviewSession}
-            onExploreSets={() => setCurrentView('sets')}
+            onExploreSets={() => handleNavigate('sets')}
+            onBack={handleGoBack}
           />
         )}
 
         {currentView === 'progress' && (
           <ProgressView
             stats={stats}
-            onExploreSets={() => setCurrentView('sets')}
-            onNavigateToArchive={() => setCurrentView('archive')}
+            onExploreSets={() => handleNavigate('sets')}
+            onNavigateToArchive={() => handleNavigate('archive')}
             onStartReview={() => {
               if (reviewItems.length > 0) {
                 handleStartReviewSession(reviewItems.map(r => r.concept));
               } else {
-                setCurrentView('review');
+                handleNavigate('review');
               }
             }}
+            onBack={handleGoBack}
           />
         )}
       </main>
 
-      {/* Create Set Modal */}
+      {/* Create Set Modal with full Generator Mode & Input Method support */}
       <CreateSetModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSetCreated={handleSetCreated}
+        initialMethod={createModalMethod}
+        initialTopic={createModalTopic}
+        initialGeneratorMode={createModalMode}
       />
 
       {/* Session Summary Modal */}
@@ -400,21 +487,30 @@ export default function App() {
         }}
       />
 
-      {/* Geometric Balance Editorial Footer */}
-      <footer className="border-t-2 border-[#1A1A1A] bg-[#FDFCF8] mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch">
+      {/* Global AI Study Tutor & Homework Help Modal */}
+      <StudyTutorModal
+        isOpen={isGlobalTutorOpen}
+        onClose={() => setIsGlobalTutorOpen(false)}
+        studySet={activeSet}
+        availableSets={studySets}
+        initialMode={globalTutorInitialMode}
+      />
+
+      {/* Modern Refined Footer */}
+      <footer className="border-t border-stone-200/90 bg-[#FAF8F5] mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Active Progress Bar Preview */}
-          <div className="flex-1 flex items-center px-4 sm:px-8 py-4 md:py-0 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1A1A]">
-            <div className="w-full space-y-1.5">
-              <div className="flex justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-[#1A1A1A]">
-                <span>CURRICULUM MASTERY &bull; AFRICAN HISTORY & KNOWLEDGE</span>
+          <div className="w-full md:max-w-md bg-white border border-stone-200/90 rounded-2xl px-4 py-3 shadow-sm">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-[#161616]">
+                <span>CURRICULUM MASTERY &bull; AFRICAN HISTORY</span>
                 <span className="text-[#D92B8A]">
                   {stats.subjectMastery['AFRICAN HISTORY'] ? `${stats.subjectMastery['AFRICAN HISTORY'].percentage}%` : '82%'}
                 </span>
               </div>
-              <div className="w-full h-3 border border-[#1A1A1A] bg-white p-[2px] rounded-sm">
+              <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden p-[1px]">
                 <div 
-                  className="h-full bg-[#D92B8A] transition-all duration-500" 
+                  className="h-full bg-gradient-to-r from-[#D92B8A] to-[#f43f5e] rounded-full transition-all duration-500" 
                   style={{ width: `${stats.subjectMastery['AFRICAN HISTORY'] ? Math.max(stats.subjectMastery['AFRICAN HISTORY'].percentage, 10) : 82}%` }}
                 />
               </div>
@@ -422,28 +518,44 @@ export default function App() {
           </div>
 
           {/* Quick Navigation Controls */}
-          <nav className="flex items-center text-xs font-display font-black uppercase tracking-wider divide-x-2 divide-[#1A1A1A]">
+          <nav className="flex items-center gap-1.5 bg-white border border-stone-200/90 p-1.5 rounded-full shadow-sm">
             <button 
               onClick={() => handleNavigate('sets')}
-              className={`px-4 sm:px-6 py-4.5 hover:bg-white transition-colors ${currentView === 'sets' ? 'bg-[#1A1A1A] text-white' : 'text-[#1A1A1A]'}`}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
+                currentView === 'sets' 
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
             >
               EXPLORE
             </button>
             <button 
               onClick={() => handleNavigate('archive')}
-              className={`px-4 sm:px-6 py-4.5 hover:bg-white transition-colors ${currentView === 'archive' ? 'bg-[#1A1A1A] text-white' : 'text-[#1A1A1A]'}`}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
+                currentView === 'archive' 
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
             >
               ARCHIVE
             </button>
             <button 
               onClick={() => handleNavigate('progress')}
-              className={`px-4 sm:px-6 py-4.5 hover:bg-white transition-colors ${currentView === 'progress' ? 'bg-[#1A1A1A] text-white' : 'text-[#1A1A1A]'}`}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
+                currentView === 'progress' 
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
             >
               STATS
             </button>
             <button 
               onClick={() => handleNavigate('home')}
-              className={`px-4 sm:px-6 py-4.5 transition-colors ${currentView === 'home' ? 'bg-[#1A1A1A] text-white' : 'hover:bg-white text-[#1A1A1A]'}`}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
+                currentView === 'home' 
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
             >
               HOME
             </button>
