@@ -31,6 +31,9 @@ const DEFAULT_USERS: UserProfile[] = [
     role: 'Lead Scholar',
     avatarInitials: 'KM',
     createdAt: '2026-01-01T00:00:00.000Z',
+    isSubscribed: true,
+    plan: 'Yearly',
+    status: 'Registered',
   },
   {
     id: 'user_amina',
@@ -39,6 +42,9 @@ const DEFAULT_USERS: UserProfile[] = [
     role: 'Researcher',
     avatarInitials: 'AD',
     createdAt: '2026-02-01T00:00:00.000Z',
+    isSubscribed: true,
+    plan: 'Monthly',
+    status: 'Registered',
   },
   {
     id: 'user_guest',
@@ -47,6 +53,9 @@ const DEFAULT_USERS: UserProfile[] = [
     role: 'Learner',
     avatarInitials: 'GS',
     createdAt: '2026-03-01T00:00:00.000Z',
+    isSubscribed: false,
+    plan: 'Free',
+    status: 'Guest',
   },
 ];
 
@@ -97,6 +106,7 @@ export class StorageService {
         .toUpperCase()
         .slice(0, 2) || 'US';
 
+      const isGuest = cleanEmail.includes('guest');
       user = {
         id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         name: userName,
@@ -104,6 +114,9 @@ export class StorageService {
         role: 'Active Scholar',
         avatarInitials: initials,
         createdAt: new Date().toISOString(),
+        isSubscribed: !isGuest,
+        plan: isGuest ? 'Free' : 'Monthly',
+        status: isGuest ? 'Guest' : 'Registered',
       };
       users.push(user);
       localStorage.setItem(STORAGE_KEYS.ALL_USERS, JSON.stringify(users));
@@ -542,8 +555,16 @@ export class StorageService {
     const allConcepts = allSets.flatMap(s => s.concepts);
     const performances = this.getPerformances();
 
-    // Target concepts count based on duration (~1 to 1.5 min per concept)
-    const targetCount = durationMinutes === 5 ? 4 : durationMinutes === 10 ? 7 : durationMinutes === 20 ? 12 : 16;
+    // Target concepts count based on duration (~1 to 2 min per concept)
+    const targetCount = durationMinutes === 5 
+      ? 4 
+      : durationMinutes === 10 
+      ? 6 
+      : durationMinutes === 20 
+      ? 10 
+      : durationMinutes === 30 
+      ? 14 
+      : 24; // 60 minutes
     
     // Allocate ~50% to review queue, ~50% to fresh/unstudied concepts
     const reviewPortion = Math.min(needingReview.length, Math.ceil(targetCount * 0.5));

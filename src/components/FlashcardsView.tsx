@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StudySet, StudyConcept, FlashcardRating } from '../types';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   RotateCw, 
   ChevronLeft, 
@@ -15,6 +16,7 @@ import {
 interface FlashcardsViewProps {
   studySet: StudySet;
   onBack: () => void;
+  onGoHome?: () => void;
   onRecordRating: (conceptId: string, rating: FlashcardRating) => void;
   onCompleteSession: (result: { total: number; confident: number; struggled: number }) => void;
 }
@@ -22,6 +24,7 @@ interface FlashcardsViewProps {
 export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
   studySet,
   onBack,
+  onGoHome,
   onRecordRating,
   onCompleteSession,
 }) => {
@@ -96,11 +99,16 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleNext = () => {
     if (currentIndex < totalCards - 1) {
       setIsFlipped(false);
       setShowHint(false);
       setCurrentIndex(prev => prev + 1);
+      scrollToTop();
     }
   };
 
@@ -109,6 +117,7 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
       setIsFlipped(false);
       setShowHint(false);
       setCurrentIndex(prev => prev - 1);
+      scrollToTop();
     }
   };
 
@@ -133,14 +142,7 @@ export const FlashcardsView: React.FC<FlashcardsViewProps> = ({
       {/* Top Header & Progress */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <button
-            id="flashcards-back-btn"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
+          <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
 
           <div className="flex items-center gap-2 font-mono text-xs font-bold text-stone-800">
             <span className="px-3 py-1 bg-white border border-stone-200 rounded-full shadow-sm">

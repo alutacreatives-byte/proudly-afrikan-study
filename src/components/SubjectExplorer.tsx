@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { StudySet, AppView } from '../types';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   Search, 
   Plus, 
@@ -33,6 +34,7 @@ interface SubjectExplorerProps {
   onDeleteCustomSet: (setId: string) => void;
   onOpenTutor?: (mode?: 'tutor' | 'homework', initialTopic?: string) => void;
   onBack?: () => void;
+  onGoHome?: () => void;
 }
 
 export const SubjectExplorer: React.FC<SubjectExplorerProps> = ({
@@ -43,6 +45,7 @@ export const SubjectExplorer: React.FC<SubjectExplorerProps> = ({
   onDeleteCustomSet,
   onOpenTutor,
   onBack,
+  onGoHome,
 }) => {
   const [selectedBroadArea, setSelectedBroadArea] = useState<string>(initialCategory);
   const [selectedSubSubject, setSelectedSubSubject] = useState<string | null>(null);
@@ -138,17 +141,10 @@ export const SubjectExplorer: React.FC<SubjectExplorerProps> = ({
 
   return (
     <div className="space-y-8 pb-16 w-full max-w-full overflow-hidden">
-      {/* Back Button */}
-      {onBack && (
-        <button
-          id="explorer-back-btn"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
-      )}
+      {/* Global Navigation: BACK + HOME */}
+      <div className="flex items-center justify-between">
+        <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
+      </div>
 
       {/* Top Editorial Header - Fully Responsive Layout */}
       <div className="border-b border-stone-200/90 pb-6 flex flex-col lg:flex-row lg:items-end justify-between gap-5 sm:gap-6">

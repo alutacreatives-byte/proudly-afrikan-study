@@ -194,15 +194,15 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
   );
 
   const generatorTitles: Record<GeneratorMode, string> = {
-    'standard': 'Study & Resource Builder',
-    'exam': 'Exam Generator (With Answer Keys)',
-    'worksheet': 'Worksheet Generator (Classroom Ready)',
-    'lesson-plan': 'Lesson Plan Generator (Pedagogical)',
-    'pdf-quiz': 'PDF → Quiz Generator',
-    'study-guide': 'PDF → Revision Study Guide',
-    'slides': 'Presentation & Slide Outline Builder',
-    'course': 'Course Module Architect',
-    'roadmap': 'Learning Pathway & Roadmap'
+    'standard': 'STUDY SET GENERATOR',
+    'exam': 'EXAM GENERATOR',
+    'worksheet': 'WORKSHEET GENERATOR',
+    'lesson-plan': 'LESSON PLAN GENERATOR',
+    'pdf-quiz': 'PDF TO QUIZ GENERATOR',
+    'study-guide': 'STUDY GUIDE GENERATOR',
+    'slides': 'PRESENTATION GENERATOR',
+    'course': 'COURSE MODULE BUILDER',
+    'roadmap': 'LEARNING ROADMAP BUILDER'
   };
 
   return (
@@ -218,20 +218,19 @@ export const CreateSetModal: React.FC<CreateSetModalProps> = ({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-pink-50 text-[#D92B8A] font-mono text-xs font-bold uppercase rounded-full mb-0.5 border border-pink-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D92B8A] inline-block"></span>
-                <span>{generatorTitles[generatorMode] || 'Resource Generator'}</span>
-              </div>
               <h2 className="font-display font-black text-xl sm:text-2xl uppercase text-[#161616] tracking-tight leading-none">
-                Resource Workbench & Set Builder
+                {generatorTitles[generatorMode] || 'STUDY TOOL'}
               </h2>
+              <div className="font-mono text-xs font-bold text-[#D92B8A] uppercase tracking-wider mt-1">
+                STUDY TOOL
+              </div>
             </div>
           </div>
 
           <button
             id="close-create-set-modal-btn"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-stone-200/70 border border-stone-300 text-stone-700 transition-colors"
+            className="p-2 rounded-full hover:bg-stone-200/70 border border-stone-300 text-stone-700 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />

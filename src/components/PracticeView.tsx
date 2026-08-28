@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StudySet, StudyConcept } from '../types';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -17,6 +18,7 @@ import {
 interface PracticeViewProps {
   studySet: StudySet;
   onBack: () => void;
+  onGoHome?: () => void;
   onRecordAnswer: (conceptId: string, isCorrect: boolean) => void;
   onCompletePractice: (result: { total: number; reinforced: number; needsReview: number }) => void;
   onNavigateToFlashcards?: (set: StudySet) => void;
@@ -25,6 +27,7 @@ interface PracticeViewProps {
 export const PracticeView: React.FC<PracticeViewProps> = ({
   studySet,
   onBack,
+  onGoHome,
   onRecordAnswer,
   onCompletePractice,
   onNavigateToFlashcards,
@@ -56,13 +59,19 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleNext = () => {
     if (currentIndex < totalQuestions - 1) {
       setCurrentIndex(prev => prev + 1);
       setSelectedOption(null);
       setIsAnswered(false);
+      scrollToTop();
     } else {
       setIsCompleted(true);
+      scrollToTop();
       onCompletePractice({
         total: totalQuestions,
         reinforced: reinforcedIds.size + (selectedOption === currentConcept?.correctOptionIndex ? 1 : 0),
@@ -184,14 +193,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
       {/* Top Header & Breadcrumb */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <button
-            id="practice-back-btn"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
+          <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
 
           <div className="flex items-center gap-2 font-mono text-xs font-bold text-stone-800">
             <span className="px-3 py-1 bg-white border border-stone-200 rounded-full shadow-sm">

@@ -10,6 +10,7 @@ import { AIService } from '../services/aiService';
 import { StudyTutorModal } from './StudyTutorModal';
 import { StudyGuideModal } from './StudyGuideModal';
 import { SummaryModal } from './SummaryModal';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   BookOpen, 
   ArrowLeft, 
@@ -42,6 +43,7 @@ interface StudySessionViewProps {
   onNavigateToFlashcards: (set: StudySet) => void;
   onNavigateToPractice: (set: StudySet) => void;
   onBack: () => void;
+  onGoHome?: () => void;
 }
 
 export const StudySessionView: React.FC<StudySessionViewProps> = ({
@@ -51,6 +53,7 @@ export const StudySessionView: React.FC<StudySessionViewProps> = ({
   onNavigateToFlashcards,
   onNavigateToPractice,
   onBack,
+  onGoHome,
 }) => {
   const conceptCardRef = useRef<HTMLElement>(null);
   const [currentIndex, setCurrentIndex] = useState(initialConceptIndex);
@@ -381,13 +384,8 @@ ${differentiatedResult.content}
           </div>
         </div>
 
-        <div className="text-center">
-          <button
-            onClick={onBack}
-            className="text-xs font-mono font-bold uppercase tracking-wider text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            ← Return to Study Sets
-          </button>
+        <div className="flex items-center justify-center pt-2">
+          <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
         </div>
       </div>
     );
@@ -415,14 +413,7 @@ ${differentiatedResult.content}
 
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-4">
-        <button
-          id="study-session-back-btn"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>HOME</span>
-        </button>
+        <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
 
         {/* Top Study Tools Toolbar */}
         <div className="flex items-center gap-2">

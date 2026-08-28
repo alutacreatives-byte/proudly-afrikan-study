@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { StudyConcept, StudySet, ConceptPerformance } from '../types';
 import { StorageService } from '../services/storageService';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   RotateCcw, 
   Sparkles, 
@@ -30,6 +31,7 @@ interface ReviewViewProps {
   onStartReviewSession: (conceptsToReview: StudyConcept[], categoryName?: string) => void;
   onExploreSets: () => void;
   onBack?: () => void;
+  onGoHome?: () => void;
 }
 
 export const ReviewView: React.FC<ReviewViewProps> = ({
@@ -37,6 +39,7 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
   onStartReviewSession,
   onExploreSets,
   onBack,
+  onGoHome,
 }) => {
   const [activeTab, setActiveTab] = useState<'spaced' | 'interleaved'>('spaced');
 
@@ -78,17 +81,10 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
 
   return (
     <div id="review-view-root" className="max-w-5xl mx-auto space-y-8 pb-16">
-      {/* Back Button */}
-      {onBack && (
-        <button
-          id="review-back-btn"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
-      )}
+      {/* Global Navigation: BACK + HOME */}
+      <div className="flex items-center justify-between">
+        <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
+      </div>
 
       {/* Top Header */}
       <div className="bg-white border border-stone-200/90 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">

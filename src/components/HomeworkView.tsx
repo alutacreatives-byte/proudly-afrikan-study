@@ -23,6 +23,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Home,
   Check,
   Edit3,
   X
@@ -34,6 +35,7 @@ interface HomeworkViewProps {
   onSelectSet: (set: StudySet) => void;
   onNavigate: (view: AppView) => void;
   onBack?: () => void;
+  onGoHome?: () => void;
   initialQuestion?: string;
 }
 
@@ -63,6 +65,7 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
   onSelectSet,
   onNavigate,
   onBack,
+  onGoHome,
   initialQuestion = '',
 }) => {
   // Homework input states
@@ -335,7 +338,7 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
             {hasSubmitted && (
               <button
                 onClick={handleResetConversation}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-mono text-xs font-bold uppercase rounded-full transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-mono text-xs font-bold uppercase rounded-full transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                 title="Start a new problem"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-[#D92B8A]" />
@@ -352,10 +355,27 @@ export const HomeworkView: React.FC<HomeworkViewProps> = ({
                   onNavigate('home');
                 }
               }}
-              className="px-5 py-2.5 bg-white text-[#161616] hover:bg-stone-100 font-display text-xs font-black uppercase rounded-full transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="px-4 py-2.5 bg-white text-[#161616] hover:bg-stone-100 font-display text-xs font-black uppercase rounded-full transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+              title="Go back to previous page"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>BACK</span>
+            </button>
+
+            <button
+              id="homework-home-btn"
+              onClick={() => {
+                if (onGoHome) {
+                  onGoHome();
+                } else {
+                  onNavigate('home');
+                }
+              }}
+              className="px-4 py-2.5 bg-[#FAF7F0] text-[#161616] hover:bg-white font-display text-xs font-black uppercase rounded-full transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+              title="Return to Study Dashboard"
+            >
+              <Home className="w-3.5 h-3.5 text-[#D92B8A]" />
+              <span>HOME</span>
             </button>
           </div>
         </div>

@@ -5,7 +5,6 @@ import {
   StudyConcept, 
   UserStats, 
   FlashcardRating, 
-  SessionResult,
   UserProfile
 } from './types';
 import { StorageService } from './services/storageService';
@@ -17,14 +16,13 @@ import { PracticeView } from './components/PracticeView';
 import { StudySessionView } from './components/StudySessionView';
 import { StudyPlanView } from './components/StudyPlanView';
 import { ReviewView } from './components/ReviewView';
-import { ProgressView } from './components/ProgressView';
-import { ArchiveView } from './components/ArchiveView';
+import { ToolsView } from './components/ToolsView';
+import { LibraryView } from './components/LibraryView';
 import { CreateSetModal, GeneratorMode, InputMethod } from './components/CreateSetModal';
 import { StudySetDetailView } from './components/StudySetDetailView';
 import { SessionSummaryModal } from './components/SessionSummaryModal';
 import { StudyTutorModal } from './components/StudyTutorModal';
 import { HomeworkView } from './components/HomeworkView';
-import { CreateView } from './components/CreateView';
 import { StudyHubView } from './components/StudyHubView';
 
 export default function App() {
@@ -82,10 +80,32 @@ export default function App() {
     return studySets.filter(s => s.featured || s.isCustom);
   }, [studySets]);
 
+  // Dynamic Curriculum Mastery calculation based on active subject/topic
+  const currentSubjectName = useMemo(() => {
+    if (activeSet) {
+      return activeSet.category || activeSet.title;
+    }
+    return 'AFRICAN HISTORY';
+  }, [activeSet]);
+
+  const normalizedSubjectName = currentSubjectName.toUpperCase();
+
+  const currentMasteryPercentage = useMemo(() => {
+    const matchingKey = Object.keys(stats.subjectMastery).find(
+      k => k.toUpperCase() === normalizedSubjectName || 
+           normalizedSubjectName.includes(k.toUpperCase()) || 
+           k.toUpperCase().includes(normalizedSubjectName)
+    );
+    if (matchingKey && stats.subjectMastery[matchingKey]) {
+      return Math.min(100, Math.max(0, stats.subjectMastery[matchingKey].percentage));
+    }
+    return 0;
+  }, [stats.subjectMastery, normalizedSubjectName]);
+
   // Navigation & Set Selection
   const handleSelectSet = (set: StudySet, targetMode?: AppView) => {
     setActiveSet(set);
-    const nextView = targetMode || 'set-detail';
+    const nextView = targetMode || 'study';
     setViewHistory(prev => (prev[prev.length - 1] === nextView ? prev : [...prev, nextView]));
     setCurrentView(nextView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -96,7 +116,7 @@ export default function App() {
       setExplorerCategory(categoryFilter);
     }
     // If navigating directly to a mode that needs an active set, ensure activeSet is set
-    if (['study', 'flashcards', 'practice'].includes(view) && !activeSet && studySets.length > 0) {
+    if (['study', 'learn', 'flashcards', 'practice'].includes(view) && !activeSet && studySets.length > 0) {
       setActiveSet(studySets[0]);
     }
     setViewHistory(prev => (prev[prev.length - 1] === view ? prev : [...prev, view]));
@@ -214,39 +234,36 @@ export default function App() {
     });
   };
 
-  // Launch review session for specific concepts
-  const handleStartReviewSession = (conceptsToReview: StudyConcept[], categoryName?: string) => {
-    const reviewSet: StudySet = {
-      id: `review-${Date.now()}`,
-      title: categoryName ? `Review: ${categoryName}` : 'Adaptive Spaced Review',
-      description: `Targeted review session containing ${conceptsToReview.length} concepts that need memory reinforcement.`,
-      category: categoryName || 'SPACED REVIEW',
-      estimatedMinutes: Math.ceil(conceptsToReview.length * 1.5),
-      createdAt: new Date().toISOString(),
-      concepts: conceptsToReview,
-    };
-    setActiveSet(reviewSet);
-    setCurrentView('flashcards');
-  };
-
-  // Create custom set
-  const handleSetCreated = (newSet: StudySet, autoLaunchMode?: AppView) => {
-    StorageService.saveCustomSet(newSet);
+  const handleSetCreated = (newSet: StudySet) => {
     refreshData();
     setActiveSet(newSet);
-    if (autoLaunchMode) {
-      setCurrentView(autoLaunchMode);
-    } else {
-      setCurrentView('set-detail');
-    }
+    setCurrentView('study');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteCustomSet = (setId: string) => {
-    StorageService.deleteCustomSet(setId);
-    refreshData();
-    if (activeSet?.id === setId) {
-      setActiveSet(studySets[0] || null);
+    if (confirm('Are you sure you want to delete this custom study set?')) {
+      StorageService.deleteCustomSet(setId);
+      refreshData();
+      if (activeSet?.id === setId) {
+        const sets = StorageService.getAllSets();
+        setActiveSet(sets[0] || null);
+      }
     }
+  };
+
+  const handleStartReviewSession = (concepts: StudyConcept[]) => {
+    const reviewSet: StudySet = {
+      id: `review-${Date.now()}`,
+      title: `Spaced Review Session (${concepts.length} Concepts)`,
+      description: 'Curated active recall and reinforcement queue for concepts requiring review.',
+      category: 'SPACED REVIEW',
+      estimatedMinutes: Math.max(5, concepts.length * 2),
+      createdAt: new Date().toISOString(),
+      concepts: concepts,
+    };
+    setActiveSet(reviewSet);
+    handleNavigate('flashcards');
   };
 
   const handleOpenGlobalTutor = (mode: 'tutor' | 'homework' = 'homework') => {
@@ -255,24 +272,25 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F0] text-[#161616] flex flex-col selection:bg-[#D92B8A] selection:text-white">
-      {/* Primary Brand Header */}
+    <div id="app-root" className="min-h-screen bg-[#FDFBF7] text-[#161616] flex flex-col font-sans selection:bg-[#D92B8A] selection:text-white">
+      {/* Dynamic 4-Destination Top Navigation Header */}
       <Header
         currentView={currentView}
         onNavigate={handleNavigate}
         stats={stats}
         reviewCount={reviewItems.length}
-        onCreateSetClick={(method, topic) => handleOpenCreateModal(method || 'topic', topic || '')}
+        onCreateSetClick={(method, topic) => handleOpenCreateModal(method || 'topic', topic || '', 'lesson-plan')}
         onOpenTutor={handleOpenGlobalTutor}
         currentUser={currentUser}
         onLogout={() => {
-          const guest = StorageService.logoutUser();
+          const guest = StorageService.loginUser('guest@afrikanstudy.org', 'Guest Scholar');
           handleUserChanged(guest);
         }}
       />
 
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+        {/* DESTINATION 1: STUDY */}
         {currentView === 'home' && (
           <HomeScreen
             onNavigate={handleNavigate}
@@ -293,16 +311,6 @@ export default function App() {
           />
         )}
 
-        {currentView === 'create' && (
-          <CreateView
-            onNavigate={handleNavigate}
-            onCreateSetClick={(method, topic, mode) => handleOpenCreateModal(method || 'topic', topic || '', mode || 'lesson-plan')}
-            onSelectSet={handleSelectSet}
-            featuredSets={featuredSets}
-            onBack={handleGoBack}
-          />
-        )}
-
         {(currentView === 'study-hub' || (currentView === 'study' && !activeSet)) && (
           <StudyHubView
             studySets={studySets}
@@ -313,27 +321,7 @@ export default function App() {
             stats={stats}
             onCreateSetClick={() => handleOpenCreateModal('topic', '')}
             onBack={handleGoBack}
-          />
-        )}
-
-        {currentView === 'homework' && (
-          <HomeworkView
-            studySets={studySets}
-            activeSet={activeSet}
-            onSelectSet={handleSelectSet}
-            onNavigate={handleNavigate}
-            onBack={handleGoBack}
-          />
-        )}
-
-        {currentView === 'archive' && (
-          <ArchiveView
-            currentUser={currentUser}
-            studySets={studySets}
-            onSelectSet={handleSelectSet}
-            onExploreSets={() => handleNavigate('sets')}
-            onUserChanged={handleUserChanged}
-            onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
           />
         )}
 
@@ -346,6 +334,7 @@ export default function App() {
             onDeleteCustomSet={handleDeleteCustomSet}
             onOpenTutor={handleOpenGlobalTutor}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
           />
         )}
 
@@ -353,17 +342,19 @@ export default function App() {
           <StudySetDetailView
             studySet={activeSet}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
             onLaunchMode={(mode) => handleNavigate(mode)}
-            onLaunchConceptLesson={(conceptIndex) => {
+            onLaunchConceptLesson={() => {
               handleNavigate('study');
             }}
           />
         )}
 
-        {currentView === 'study' && activeSet && (
+        {(currentView === 'study' || currentView === 'learn') && activeSet && (
           <StudySessionView
             studySet={activeSet}
-            onBack={() => handleNavigate('home')}
+            onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
             onFinishLesson={(setId, count) => {
               handleCompleteGuidedStudy({
                 total: activeSet.concepts.length,
@@ -385,6 +376,7 @@ export default function App() {
           <FlashcardsView
             studySet={activeSet}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
             onRecordRating={handleRecordFlashcardRating}
             onCompleteSession={handleCompleteFlashcards}
           />
@@ -394,6 +386,7 @@ export default function App() {
           <PracticeView
             studySet={activeSet}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
             onRecordAnswer={handleRecordPracticeAnswer}
             onCompletePractice={(result) => {
               handleCompletePractice({
@@ -408,9 +401,43 @@ export default function App() {
           />
         )}
 
+        {currentView === 'review' && (
+          <ReviewView
+            reviewItems={reviewItems}
+            onStartReviewSession={handleStartReviewSession}
+            onExploreSets={() => handleNavigate('sets')}
+            onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
+          />
+        )}
+
+        {/* DESTINATION 2: TOOLS */}
+        {(currentView === 'tools' || currentView === 'create') && (
+          <ToolsView
+            onNavigate={handleNavigate}
+            onCreateSetClick={(method, topic, mode) => handleOpenCreateModal(method || 'topic', topic || '', mode || 'lesson-plan')}
+            onSelectSet={handleSelectSet}
+            onOpenTutor={handleOpenGlobalTutor}
+            onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
+          />
+        )}
+
+        {currentView === 'homework' && (
+          <HomeworkView
+            studySets={studySets}
+            activeSet={activeSet}
+            onSelectSet={handleSelectSet}
+            onNavigate={handleNavigate}
+            onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
+          />
+        )}
+
+        {/* DESTINATION 3: PLANNER */}
         {currentView === 'planner' && (
           <StudyPlanView
-            onStartSession={(concepts, title, durationMinutes) => {
+            onStartSession={(concepts, title, durationMinutes, targetMode) => {
               const planSet: StudySet = {
                 id: `plan-${Date.now()}`,
                 title: title,
@@ -421,35 +448,27 @@ export default function App() {
                 concepts: concepts,
               };
               setActiveSet(planSet);
-              handleNavigate('study');
+              handleNavigate(targetMode || 'study');
             }}
             onExploreSets={() => handleNavigate('sets')}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
           />
         )}
 
-        {currentView === 'review' && (
-          <ReviewView
-            reviewItems={reviewItems}
-            onStartReviewSession={handleStartReviewSession}
-            onExploreSets={() => handleNavigate('sets')}
-            onBack={handleGoBack}
-          />
-        )}
-
-        {currentView === 'progress' && (
-          <ProgressView
+        {/* DESTINATION 4: MY LIBRARY */}
+        {(currentView === 'library' || currentView === 'archive' || currentView === 'progress') && (
+          <LibraryView
+            currentUser={currentUser}
+            studySets={studySets}
             stats={stats}
+            onSelectSet={handleSelectSet}
             onExploreSets={() => handleNavigate('sets')}
-            onNavigateToArchive={() => handleNavigate('archive')}
-            onStartReview={() => {
-              if (reviewItems.length > 0) {
-                handleStartReviewSession(reviewItems.map(r => r.concept));
-              } else {
-                handleNavigate('review');
-              }
-            }}
+            onUserChanged={handleUserChanged}
+            onNavigate={handleNavigate}
+            onCreateSetClick={() => handleOpenCreateModal('topic', '')}
             onBack={handleGoBack}
+            onGoHome={() => handleNavigate('home')}
           />
         )}
       </main>
@@ -499,65 +518,65 @@ export default function App() {
       {/* Modern Refined Footer */}
       <footer className="border-t border-stone-200/90 bg-[#FAF8F5] mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Active Progress Bar Preview */}
+          {/* Dynamic Active Curriculum Mastery Meter */}
           <div className="w-full md:max-w-md bg-white border border-stone-200/90 rounded-2xl px-4 py-3 shadow-sm">
             <div className="space-y-1.5">
               <div className="flex justify-between text-[11px] font-mono font-bold uppercase tracking-wider text-[#161616]">
-                <span>CURRICULUM MASTERY &bull; AFRICAN HISTORY</span>
+                <span className="truncate max-w-[280px]">CURRICULUM MASTERY &bull; {normalizedSubjectName}</span>
                 <span className="text-[#D92B8A]">
-                  {stats.subjectMastery['AFRICAN HISTORY'] ? `${stats.subjectMastery['AFRICAN HISTORY'].percentage}%` : '82%'}
+                  {currentMasteryPercentage}%
                 </span>
               </div>
               <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden p-[1px]">
                 <div 
                   className="h-full bg-gradient-to-r from-[#D92B8A] to-[#f43f5e] rounded-full transition-all duration-500" 
-                  style={{ width: `${stats.subjectMastery['AFRICAN HISTORY'] ? Math.max(stats.subjectMastery['AFRICAN HISTORY'].percentage, 10) : 82}%` }}
+                  style={{ width: `${currentMasteryPercentage}%` }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Quick Navigation Controls */}
-          <nav className="flex items-center gap-1.5 bg-white border border-stone-200/90 p-1.5 rounded-full shadow-sm">
-            <button 
-              onClick={() => handleNavigate('sets')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
-                currentView === 'sets' 
-                  ? 'bg-[#18181B] text-white shadow-sm' 
-                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
-              }`}
-            >
-              EXPLORE
-            </button>
-            <button 
-              onClick={() => handleNavigate('archive')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
-                currentView === 'archive' 
-                  ? 'bg-[#18181B] text-white shadow-sm' 
-                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
-              }`}
-            >
-              ARCHIVE
-            </button>
-            <button 
-              onClick={() => handleNavigate('progress')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
-                currentView === 'progress' 
-                  ? 'bg-[#18181B] text-white shadow-sm' 
-                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
-              }`}
-            >
-              STATS
-            </button>
+          {/* Clean 4-Destination Quick Navigation Controls */}
+          <nav className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-1 sm:gap-1.5 bg-white border border-stone-200/90 p-1 sm:p-1.5 rounded-2xl sm:rounded-full shadow-sm max-w-full">
             <button 
               onClick={() => handleNavigate('home')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all ${
-                currentView === 'home' 
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-full text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                ['home', 'study', 'study-hub', 'learn', 'flashcards', 'practice', 'review', 'sets', 'set-detail'].includes(currentView)
                   ? 'bg-[#18181B] text-white shadow-sm' 
                   : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
               }`}
             >
-              HOME
+              STUDY
+            </button>
+            <button 
+              onClick={() => handleNavigate('tools')}
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-full text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                ['tools', 'create', 'homework'].includes(currentView)
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
+            >
+              TOOLS
+            </button>
+            <button 
+              onClick={() => handleNavigate('planner')}
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-full text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                currentView === 'planner' 
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
+            >
+              PLANNER
+            </button>
+            <button 
+              onClick={() => handleNavigate('library')}
+              className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-full text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                ['library', 'archive', 'progress'].includes(currentView)
+                  ? 'bg-[#18181B] text-white shadow-sm' 
+                  : 'text-stone-700 hover:text-[#161616] hover:bg-stone-50'
+              }`}
+            >
+              MY LIBRARY
             </button>
           </nav>
         </div>

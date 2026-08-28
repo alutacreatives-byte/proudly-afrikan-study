@@ -71,9 +71,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     {
       num: '01',
       tag: 'ASSESSMENT & TESTING',
-      title: 'EXAM GENERATOR',
+      title: 'EXAM & QUIZ GENERATOR',
       subtitle: 'Build structured exams with multiple choice, essays, mark breakdowns, and teacher answer keys.',
-      btnText: 'BUILD EXAM →',
+      btnText: 'CREATE EXAM →',
       mode: 'exam' as GeneratorMode,
     },
     {
@@ -81,7 +81,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       tag: 'PRACTICE & EXERCISES',
       title: 'WORKSHEET GENERATOR',
       subtitle: 'Create engaging classroom worksheets with matching activities, fill-in-blanks, and full answer solutions.',
-      btnText: 'BUILD WORKSHEET →',
+      btnText: 'CREATE WORKSHEET →',
       mode: 'worksheet' as GeneratorMode,
     },
     {
@@ -89,13 +89,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       tag: 'TEACHING & PEDAGOGY',
       title: 'LESSON PLAN GENERATOR',
       subtitle: "Create pedagogical lesson plans with timed phases, Bloom's taxonomy objectives, and assessment checks.",
-      btnText: 'BUILD LESSON PLAN →',
+      btnText: 'CREATE LESSON PLAN →',
       mode: 'lesson-plan' as GeneratorMode,
     },
     {
       num: '04',
       tag: 'DOCUMENT ANALYSIS',
-      title: 'PDF → QUIZ',
+      title: 'PDF TO QUIZ GENERATOR',
       subtitle: 'Upload course PDFs or textbook chapters to generate grounded multiple-choice & analytical quiz questions.',
       btnText: 'UPLOAD PDF / DOC →',
       mode: 'pdf-quiz' as GeneratorMode,
@@ -104,9 +104,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     {
       num: '05',
       tag: 'DOCUMENT ANALYSIS',
-      title: 'PDF → STUDY GUIDE',
+      title: 'STUDY GUIDE GENERATOR',
       subtitle: 'Extract core key concepts, terminology, and memory triggers from any uploaded document.',
-      btnText: 'EXTRACT STUDY GUIDE →',
+      btnText: 'CREATE STUDY GUIDE →',
       mode: 'study-guide' as GeneratorMode,
       inputMethod: 'upload' as const,
     },
@@ -115,7 +115,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       tag: 'SLIDES & LECTURE',
       title: 'PRESENTATION GENERATOR',
       subtitle: 'Generate structured slide outlines with presenter notes, discussion prompts, and visual cues.',
-      btnText: 'BUILD SLIDES →',
+      btnText: 'CREATE SLIDES →',
       mode: 'slides' as GeneratorMode,
     },
     {
@@ -123,15 +123,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       tag: 'CURRICULUM & MODULES',
       title: 'COURSE MODULE BUILDER',
       subtitle: 'Design sequential multi-week curriculum modules with learning objectives and outcomes.',
-      btnText: 'BUILD COURSE →',
+      btnText: 'CREATE COURSE →',
       mode: 'course' as GeneratorMode,
     },
     {
       num: '08',
       tag: 'STUDENT JOURNEY',
-      title: 'LEARNING ROADMAP',
+      title: 'LEARNING ROADMAP BUILDER',
       subtitle: 'Construct personalized step-by-step learning pathways tailored to mastery level.',
-      btnText: 'BUILD ROADMAP →',
+      btnText: 'CREATE ROADMAP →',
       mode: 'roadmap' as GeneratorMode,
     },
   ];
@@ -198,19 +198,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             {/* Edition Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/90 border border-stone-300/80 rounded-full shadow-sm text-xs sm:text-sm font-mono font-bold tracking-wider uppercase text-stone-800">
               <span className="w-2.5 h-2.5 rounded-full bg-[#D92B8A] inline-block animate-pulse"></span>
-              <span>PROUDLY AFRIKAN BUILD • EDITION 1.0</span>
+              <span>PROUDLY AFRIKAN EDUCATION • STUDY COMPANION</span>
             </div>
             
             {/* Giant Oversized Display Headline: 80-100px Desktop, 60-76px Tablet, 42-54px Mobile */}
             <h1 className="font-display font-black text-5xl sm:text-7xl md:text-8xl lg:text-[5.5rem] xl:text-[6.25rem] uppercase tracking-tighter text-[#161616] leading-[0.88] sm:leading-[0.9] lg:leading-[0.92] break-words">
-              BUILD<br />
+              STUDY<br />
               ANYTHING.<br />
               <span className="text-[#D92B8A]">ABOUT<br />ANYTHING.</span>
             </h1>
 
             {/* Clear, comfortable, easy-to-read subtext (20-24px desktop, 18-21px tablet, 16-18px mobile) */}
             <p className="text-base sm:text-lg lg:text-xl xl:text-[1.3rem] text-stone-700 font-normal leading-[1.65] max-w-2xl">
-              Turn any topic, text notes, or educational PDF into sharp, classroom-ready exams, lesson plans, worksheets, and interactive courses in seconds.
+              Turn any topic, text notes, or educational PDF into sharp, classroom-ready exams, lesson plans, worksheets, and interactive study sets in seconds.
             </p>
 
             {/* Action Buttons - Fully Responsive */}
@@ -428,11 +428,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             className="rounded-[28px] bg-white border border-stone-200/80 shadow-[0_16px_40px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_24px_50px_rgba(217,43,138,0.14)] hover:-translate-y-0.5 transition-all p-7 sm:p-8 flex flex-col justify-between cursor-pointer group"
           >
             <div>
-              <div className="flex items-center justify-between">
-                <span className="font-display font-black text-3xl sm:text-4xl text-stone-400 group-hover:text-[#D92B8A] transition-colors">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display font-black text-3xl sm:text-4xl text-stone-400 group-hover:text-[#D92B8A] transition-colors shrink-0">
                   03
                 </span>
-                <span className="rounded-full px-3.5 py-1 bg-[#18181B] text-white text-xs font-mono font-bold uppercase tracking-wider shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
+                <span className="rounded-full px-3 py-1 bg-[#18181B] text-white text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider shadow-[0_2px_8px_rgba(0,0,0,0.3)] shrink-0 whitespace-nowrap">
                   PDF • DOC • DOCX
                 </span>
               </div>
@@ -1041,10 +1041,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           href="https://proudlyafrikan.com/quiz"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full sm:w-auto px-7 py-4 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-full shadow-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0 cursor-pointer"
+          className="w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 bg-[#D92B8A] hover:bg-[#c02479] text-white font-display text-xs sm:text-sm font-black uppercase tracking-wider rounded-full shadow-lg transition-all flex items-center justify-center gap-2 text-center sm:whitespace-nowrap flex-shrink-0 cursor-pointer"
         >
           <span>TAKE THE PROUDLY AFRIKAN QUIZ →</span>
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="w-4 h-4 shrink-0" />
         </a>
       </section>
     </div>

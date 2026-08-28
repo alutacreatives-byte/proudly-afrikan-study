@@ -111,6 +111,9 @@ export interface UserStats {
   subjectMastery: Record<string, SubjectProgress>;
 }
 
+export type SubscriptionPlan = 'Free' | 'Monthly' | 'Yearly';
+export type AccountStatus = 'Guest' | 'Registered';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -118,6 +121,9 @@ export interface UserProfile {
   role?: string;
   avatarInitials?: string;
   createdAt: string;
+  isSubscribed?: boolean;
+  plan?: SubscriptionPlan;
+  status?: AccountStatus;
 }
 
 export interface UserStudyNote {
@@ -134,15 +140,17 @@ export interface UserStudyNote {
 
 export type AppView = 
   | 'home'
+  | 'study'
+  | 'tools'
+  | 'planner'
+  | 'library'
   | 'create'
   | 'study-hub'
   | 'homework'
-  | 'study'
   | 'learn'
   | 'flashcards'
   | 'practice'
   | 'review'
-  | 'planner'
   | 'sets'
   | 'set-detail'
   | 'progress'
@@ -160,7 +168,7 @@ export interface SessionResult {
   mode: 'learn' | 'study' | 'flashcards' | 'practice' | 'review' | 'planner';
 }
 
-export type StudyPlanDuration = 5 | 10 | 20 | 30;
+export type StudyPlanDuration = 5 | 10 | 20 | 30 | 60;
 
 export interface StudyPlanRecommendation {
   durationMinutes: StudyPlanDuration;

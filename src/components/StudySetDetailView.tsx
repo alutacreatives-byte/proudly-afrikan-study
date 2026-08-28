@@ -4,6 +4,7 @@ import { StorageService } from '../services/storageService';
 import { StudyTutorModal } from './StudyTutorModal';
 import { StudyGuideModal } from './StudyGuideModal';
 import { SummaryModal } from './SummaryModal';
+import { GlobalNavigationButtons } from './GlobalNavigationButtons';
 import { 
   ArrowLeft, 
   Clock, 
@@ -27,6 +28,7 @@ import {
 interface StudySetDetailViewProps {
   studySet: StudySet;
   onBack: () => void;
+  onGoHome?: () => void;
   onLaunchMode: (mode: AppView) => void;
   onLaunchConceptLesson?: (conceptIndex: number) => void;
 }
@@ -34,6 +36,7 @@ interface StudySetDetailViewProps {
 export const StudySetDetailView: React.FC<StudySetDetailViewProps> = ({
   studySet,
   onBack,
+  onGoHome,
   onLaunchMode,
   onLaunchConceptLesson,
 }) => {
@@ -79,15 +82,10 @@ export const StudySetDetailView: React.FC<StudySetDetailViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* Back Button */}
-      <button
-        id="study-set-back-btn"
-        onClick={onBack}
-        className="inline-flex items-center gap-2 font-mono text-xs font-bold text-stone-600 hover:text-[#D92B8A] uppercase tracking-wider transition-colors px-3.5 py-1.5 bg-white border border-stone-200 rounded-full shadow-xs hover:border-pink-200"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back</span>
-      </button>
+      {/* Global Navigation: BACK + HOME */}
+      <div className="flex items-center justify-between">
+        <GlobalNavigationButtons onBack={onBack} onGoHome={onGoHome} />
+      </div>
 
       {/* Hero Study Set Overview Card */}
       <div className="bg-white border border-stone-200/90 rounded-3xl p-6 sm:p-8 space-y-6 shadow-[0_12px_36px_rgba(0,0,0,0.06)]">
